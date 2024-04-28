@@ -14,8 +14,13 @@ add_executable(bakermaker src/main.cpp libs/imgui/imgui.cpp libs/imgui/imgui_dra
         libs/imgui/backends/imgui_impl_glfw.cpp libs/imgui/backends/imgui_impl_opengl3.cpp
         src/libs/imfilebrowser.cpp
         src/libs/improgress.cpp
-        src/setup.cpp)
+        src/setup.cpp
+        src/UI/BaseUIScreen.cpp
+        src/ImguiMarkdownRender.cpp)
 
-target_link_libraries(bakermaker PUBLIC glfw opengl32 gdi32 imm32 ${LIBROMFS_LIBRARY})
+set(string_theory_FOUND 1)
+find_package(string_theory CONFIG REQUIRED)
+
+target_link_libraries(bakermaker PUBLIC glfw opengl32 gdi32 imm32 string_theory ${LIBROMFS_LIBRARY})
 target_include_directories(bakermaker PUBLIC libs/glfw/include libs/imgui
-        libs/imgui/backends include)
+        libs/imgui/backends ${string_theory_INCLUDE_DIRS} include)
