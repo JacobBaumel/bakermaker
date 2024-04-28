@@ -16,7 +16,8 @@ add_executable(bakermaker src/main.cpp libs/imgui/imgui.cpp libs/imgui/imgui_dra
         src/libs/improgress.cpp
         src/setup.cpp
         src/UI/BaseUIScreen.cpp
-        src/ImguiMarkdownRender.cpp)
+        src/ImguiMarkdownRender.cpp
+        src/libs/stbi.cpp)
 
 set(string_theory_FOUND 1)
 find_package(string_theory CONFIG REQUIRED)
