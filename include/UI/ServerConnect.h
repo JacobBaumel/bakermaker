@@ -12,13 +12,16 @@ namespace bakermaker {
     class ServerConnect : public BaseUIScreen {
 
     private:
-        char ip[16];
-        char user[33];
-        int port;
-        ImGui::FileBrowser* browser;
+        static constexpr int FILE_PICKER_FLAGS = ImGuiFileBrowserFlags_CloseOnEsc |
+                ImGuiFileBrowserFlags_ConfirmOnEnter;
+        char ip[16]{};
+        char user[33]{};
+        int port = 22;
+        ImGui::FileBrowser* browser{};
 
 
     public:
+        ServerConnect();
         void render(bakermaker::ProgramStage& stage) override;
     };
 }

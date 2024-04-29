@@ -27,15 +27,19 @@ namespace ST {
 }
 
 namespace bakermaker {
-    static const char* appendId(::ST::string string) {
+    ImFont** fontlist;
+    int latestId;
+    std::map<ProgramStage, BaseUIScreen*> screens;
+
+    const char* appendId(::ST::string string) {
         return (string + latestId).c_str();
     }
 
-    static const char* appendId(const char* str) {
+    const char* appendId(const char* str) {
         return appendId(ST::string(str));
     }
 
-    static void resetIds() {
+    void resetIds() {
         latestId = 0;
     }
 

@@ -6,6 +6,7 @@
 #include "ImguiMarkdownRender.h"
 #include "romfs/romfs.hpp"
 #include "UI/BaseUIScreen.h"
+#include "UI/ServerConnect.h"
 
 int main() {
     if(!glfwInit()) {
@@ -31,7 +32,7 @@ int main() {
     bool open = true, open1 = true, open2 = true;
 
     ImGuiIO& io = ImGui::GetIO();
-    ImFont* fonts[4];
+    ImFont** fonts = new ImFont*[4];
     {
         ImFontConfig config;
         config.FontDataOwnedByAtlas = false;
@@ -44,6 +45,8 @@ int main() {
         fonts[3] = io.Fonts->AddFontFromMemoryTTF((void*) umr.data(), umr.size(), 16, &config);
     }
 
+    bakermaker::fontlist = fonts;
+
     ST::string markdown;
     {
         romfs::Resource mdfile = romfs::get("test.md");
@@ -51,10 +54,12 @@ int main() {
     }
     bakermaker::ImguiMarkdownRender testtext(markdown, fonts + 1);
 
+    new bakermaker::ServerConnect();
+
     bakermaker::ProgramStage stage = bakermaker::ProgramStage::SERVER_CONNECT;
 
     while(!glfwWindowShouldClose(window)) {
-        bakermaker::latestId = 0;
+        bakermaker::resetIds();
         bakermaker::prerender();
 
         ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -62,14 +67,14 @@ int main() {
         if(ImGui::Begin("Bakermaker", &open, flags)) {
             if(ImGui::BeginTabBar("##tabbar", tabflags)) {
                 if(ImGui::BeginTabItem("Server Management", &open1, tabitemflags)) {
-                    ImGui::BeginDisabled();
+//                    ImGui::BeginDisabled();
                     for(auto& screen : bakermaker::screens) {
-                        if(screen.first == stage) ImGui::EndDisabled();
+//                        if(screen.first == stage) ImGui::EndDisabled();
                         screen.second->render(stage);
-                        if(screen.first == stage) ImGui::BeginDisabled();
+//                        if(screen.first == stage) ImGui::BeginDisabled();
                     }
 
-                    ImGui::EndDisabled();
+//                    ImGui::EndDisabled();
                     ImGui::EndTabItem();
                 }
                 if(ImGui::BeginTabItem("Documentation", &open2, tabitemflags)) {

@@ -7,16 +7,18 @@
 
 #include <map>
 #include "string_theory/string"
+#include "imgui.h"
 
 namespace ST {
     string operator+(const string& str, int num);
 }
 
 namespace bakermaker {
-    static int latestId;
-    static const char* appendId(ST::string string);
-    static const char* appendId(const char*);
-    static void resetIds();
+    extern ImFont** fontlist;
+    extern int latestId;
+    const char* appendId(ST::string string);
+    const char* appendId(const char*);
+    void resetIds();
 
     enum class ProgramStage {
         SERVER_CONNECT,
@@ -30,7 +32,7 @@ namespace bakermaker {
         virtual void render(ProgramStage& stage) = 0;
     };
 
-    static std::map<ProgramStage, BaseUIScreen*> screens;
+    extern std::map<ProgramStage, BaseUIScreen*> screens;
 }
 
 #endif //BAKERMAKER_BASEUISCREEN_H
