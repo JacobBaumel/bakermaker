@@ -13,11 +13,6 @@ namespace ST {
 }
 
 namespace bakermaker {
-    static int latestId;
-    static const char* appendId(ST::string string);
-    static const char* appendId(const char*);
-    static void resetIds();
-
     void init(GLFWwindow* window);
     void prerender();
     void postrender(GLFWwindow* window);

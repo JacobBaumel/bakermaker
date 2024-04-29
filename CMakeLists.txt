@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
 project(bakermaker)
 
+include(${CMAKE_TOOLCHAIN_FILE})
 set(CMAKE_CXX_STANDARD 20)
 
 set(LIBROMFS_PROJECT_NAME bakermaker)
@@ -17,7 +18,9 @@ add_executable(bakermaker src/main.cpp libs/imgui/imgui.cpp libs/imgui/imgui_dra
         src/setup.cpp
         src/UI/BaseUIScreen.cpp
         src/ImguiMarkdownRender.cpp
-        src/libs/stbi.cpp)
+        src/libs/stbi.cpp
+        src/UI/ServerSetup.cpp
+        src/UI/ServerConnect.cpp)
 
 set(string_theory_FOUND 1)
 find_package(string_theory CONFIG REQUIRED)

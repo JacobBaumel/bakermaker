@@ -3,6 +3,9 @@
 #include "GLFW/glfw3.h"
 #include "setup.h"
 #include "imgui.h"
+#include "ImguiMarkdownRender.h"
+#include "romfs/romfs.hpp"
+#include "UI/BaseUIScreen.h"
 
 int main() {
     if(!glfwInit()) {
@@ -27,6 +30,29 @@ int main() {
 
     bool open = true, open1 = true, open2 = true;
 
+    ImGuiIO& io = ImGui::GetIO();
+    ImFont* fonts[4];
+    {
+        ImFontConfig config;
+        config.FontDataOwnedByAtlas = false;
+        io.Fonts->Clear();
+        romfs::Resource umr = romfs::get("UbuntuMono-Regular.ttf");
+        fonts[0] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 15, &config);
+        umr = romfs::get("UbuntuMono-Bold.ttf");
+        fonts[1] = io.Fonts->AddFontFromMemoryTTF((void*) umr.data(), umr.size(), 20, &config);
+        fonts[2] = io.Fonts->AddFontFromMemoryTTF((void*) umr.data(), umr.size(), 18, &config);
+        fonts[3] = io.Fonts->AddFontFromMemoryTTF((void*) umr.data(), umr.size(), 16, &config);
+    }
+
+    ST::string markdown;
+    {
+        romfs::Resource mdfile = romfs::get("test.md");
+        markdown = ST::string((char*) mdfile.data(), mdfile.size());
+    }
+    bakermaker::ImguiMarkdownRender testtext(markdown, fonts + 1);
+
+    bakermaker::ProgramStage stage = bakermaker::ProgramStage::SERVER_CONNECT;
+
     while(!glfwWindowShouldClose(window)) {
         bakermaker::latestId = 0;
         bakermaker::prerender();
@@ -35,10 +61,19 @@ int main() {
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->Size);
         if(ImGui::Begin("Bakermaker", &open, flags)) {
             if(ImGui::BeginTabBar("##tabbar", tabflags)) {
-                if(ImGui::BeginTabItem("Item 1", &open1, tabitemflags)) {
+                if(ImGui::BeginTabItem("Server Management", &open1, tabitemflags)) {
+                    ImGui::BeginDisabled();
+                    for(auto& screen : bakermaker::screens) {
+                        if(screen.first == stage) ImGui::EndDisabled();
+                        screen.second->render(stage);
+                        if(screen.first == stage) ImGui::BeginDisabled();
+                    }
+
+                    ImGui::EndDisabled();
                     ImGui::EndTabItem();
                 }
-                if(ImGui::BeginTabItem("Item 2", &open2, tabitemflags)) {
+                if(ImGui::BeginTabItem("Documentation", &open2, tabitemflags)) {
+                    testtext.render();
                     ImGui::EndTabItem();
                 }
 
