@@ -21,7 +21,7 @@ namespace ST {
         std::char_traits<char>::copy(&cat[0], str.c_str(), str.size());
         std::char_traits<char>::copy(&cat[str.size()], charnum, digits);
 
-        delete charnum;
+        delete[] charnum;
         return string::from_validated(std::move(cat));
     }
 }

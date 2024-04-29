@@ -23,6 +23,7 @@ int main() {
     }
 
     bakermaker::init(window);
+
     const ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
                                    ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration;
 
@@ -30,33 +31,6 @@ int main() {
     const ImGuiTabItemFlags tabitemflags = ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | ImGuiTabItemFlags_NoReorder;
 
     bool open = true, open1 = true, open2 = true;
-
-    ImGuiIO& io = ImGui::GetIO();
-    ImFont** fonts = new ImFont*[4];
-    {
-        ImFontConfig config;
-        config.FontDataOwnedByAtlas = false;
-        io.Fonts->Clear();
-        romfs::Resource umr = romfs::get("UbuntuMono-Regular.ttf");
-        fonts[0] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 15, &config);
-        umr = romfs::get("UbuntuMono-Bold.ttf");
-        fonts[1] = io.Fonts->AddFontFromMemoryTTF((void*) umr.data(), umr.size(), 20, &config);
-        fonts[2] = io.Fonts->AddFontFromMemoryTTF((void*) umr.data(), umr.size(), 18, &config);
-        fonts[3] = io.Fonts->AddFontFromMemoryTTF((void*) umr.data(), umr.size(), 16, &config);
-    }
-
-    bakermaker::fontlist = fonts;
-
-    ST::string markdown;
-    {
-        romfs::Resource mdfile = romfs::get("test.md");
-        markdown = ST::string((char*) mdfile.data(), mdfile.size());
-    }
-    bakermaker::ImguiMarkdownRender testtext(markdown, fonts + 1);
-
-    new bakermaker::ServerConnect();
-
-    bakermaker::ProgramStage stage = bakermaker::ProgramStage::SERVER_CONNECT;
 
     while(!glfwWindowShouldClose(window)) {
         bakermaker::resetIds();
@@ -70,7 +44,7 @@ int main() {
 //                    ImGui::BeginDisabled();
                     for(auto& screen : bakermaker::screens) {
 //                        if(screen.first == stage) ImGui::EndDisabled();
-                        screen.second->render(stage);
+                        screen.second->render(bakermaker::stage);
 //                        if(screen.first == stage) ImGui::BeginDisabled();
                     }
 
@@ -78,7 +52,7 @@ int main() {
                     ImGui::EndTabItem();
                 }
                 if(ImGui::BeginTabItem("Documentation", &open2, tabitemflags)) {
-                    testtext.render();
+                    bakermaker::documentation->render();
                     ImGui::EndTabItem();
                 }
 

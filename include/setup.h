@@ -7,12 +7,17 @@
 
 #include "GLFW/glfw3.h"
 #include "string_theory/string"
+#include "ImguiMarkdownRender.h"
+#include "UI/BaseUIScreen.h"
 
 namespace ST {
     string operator+(const string& str, int num);
 }
 
 namespace bakermaker {
+    extern ImguiMarkdownRender* documentation;
+    extern bakermaker::ProgramStage stage;
+
     void init(GLFWwindow* window);
     void prerender();
     void postrender(GLFWwindow* window);
