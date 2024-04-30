@@ -2,13 +2,16 @@
 #include "UI/ServerConnect.h"
 #include "UI/BaseUIScreen.h"
 #include <iostream>
+#include "improgress.h"
 
 namespace bakermaker {
     using namespace ST::literals;
 
-    ServerConnect::ServerConnect() : BaseUIScreen(bakermaker::ProgramStage::SERVER_CONNECT) {
+    ServerConnect::ServerConnect() : BaseUIScreen(bakermaker::ProgramStage::SERVER_CONNECT),
+        connectDone(false) {
         browser = new ImGui::FileBrowser(FILE_PICKER_FLAGS);
         browser->SetTitle("Choose SSH Private Key");
+        browser->ClearSelected();
     }
 
     void ServerConnect::render(bakermaker::ProgramStage& stage) {
@@ -21,6 +24,11 @@ namespace bakermaker {
         ImGui::SameLine();
         ImGui::SetNextItemWidth(150);
         ImGui::InputText("##ip_enter", ip, 16);
+
+        ImGui::Text("Username: ");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(150);
+        ImGui::InputText("##user_enter", user, 33);
 
         ImGui::Text("Server Port: ");
         ImGui::SameLine();
@@ -35,6 +43,84 @@ namespace bakermaker {
         if(browser->HasSelected()) {
             ST::string words = "Selected File: "_st + browser->GetSelected().c_str();
             ImGui::Text(words.c_str());
+        }
+
+        ImGui::NewLine();
+        if(ImGui::Button("Submit")) {
+            showModal = true;
+            sshrc = 1;
+            connectDone = false;
+            connectThread = new std::thread([this](){
+                ssh_session session;
+                ST::string path = browser->GetSelected().string();
+                sshrc = createSession(session, ip, user, path.c_str(), port);
+                if(sshrc == 0) {
+                    ssh_disconnect(session);
+                    ssh_free(session);
+                }
+                connectDone = true;
+            });
+        }
+
+        if(showModal) {
+            ImGui::SetNextWindowFocus();
+            ImGui::SetNextWindowSize(MODAL_SIZE);
+            ImVec2 screenSize = ImGui::GetIO().DisplaySize;
+            screenSize.x = (screenSize.x - MODAL_SIZE.x) / 2;
+            screenSize.y = (screenSize.y - MODAL_SIZE.y) / 2;
+            ImGui::SetNextWindowPos(screenSize);
+            if(ImGui::Begin("Test Modal", &showModal, modalFlags)) {
+                ImGui::NewLine();
+                ImGui::Text("Testing connectivity to remote server ...");
+                if(sshrc == 1) {
+                    ImGui::SameLine(0, 15);
+                    ImGui::Spinner("##connect_load", 10, 1,
+                                   ImGui::GetColorU32(ImVec4(0.1, 0.1, 0.75, 1)));
+                }
+
+                if(connectDone) {
+                    if(connectThread != nullptr) {
+                        connectThread->join();
+                        delete connectThread;
+                        connectThread = nullptr;
+                    }
+
+                    ImGui::PushStyleColor(ImGuiCol_Text, sshrc == 0 ? ImVec4(0, 1, 0, 1) : ImVec4(1, 0, 0, 1));
+                    switch(sshrc) {
+                        case 0:
+                            ImGui::Text("Success!");
+                            break;
+
+                        case -1:
+                            ImGui::Text("Could not initialize SSH Session. Application Error. (-1)");
+                            break;
+
+                        case -2:
+                            ImGui::Text("Could not connect to SSH server (-2)");
+                            break;
+
+                        case -3:
+                            ImGui::Text("Error processing public key (-3)");
+                            break;
+
+                        case -4:
+                            ImGui::Text("Error processing private key (-4)");
+                            break;
+
+                        case -5:
+                            ImGui::Text("Could not read private key file (-5)");
+                            break;
+                    }
+
+                    ImGui::PopStyleColor(1);
+
+                    if(ImGui::Button("OK")) {
+                        showModal = false;
+                    }
+                }
+            }
+
+            ImGui::End();
         }
     }
 }

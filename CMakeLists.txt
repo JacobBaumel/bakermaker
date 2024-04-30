@@ -20,18 +20,20 @@ add_executable(bakermaker src/main.cpp libs/imgui/imgui.cpp libs/imgui/imgui_dra
         src/ImguiMarkdownRender.cpp
         src/libs/stbi.cpp
         src/UI/ServerSetup.cpp
-        src/UI/ServerConnect.cpp)
+        src/UI/ServerConnect.cpp
+        src/libs/ssh_helper.cpp
+)
 
 set(string_theory_FOUND 1)
 find_package(string_theory CONFIG REQUIRED)
 
-add_compile_options(-DLIBSSH_STATIC 1)
+#add_compile_options(-DLIBSSH_STATIC 1)
 find_package(libssh REQUIRED)
 
 message("${LIBSSH_LIBRARIES}")
 message("${LIBSSH_INCLUDE_DIRS}")
 
 target_link_libraries(bakermaker PUBLIC glfw opengl32 gdi32 imm32 string_theory ${LIBROMFS_LIBRARY}
-    ${LIBSSH_LIBRARIES})
+    ssh)
 target_include_directories(bakermaker PUBLIC libs/glfw/include libs/imgui
         libs/imgui/backends ${string_theory_INCLUDE_DIRS} ${LIBSSH_INCLUDE_DIRS} include)

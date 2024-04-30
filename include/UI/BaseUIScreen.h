@@ -27,8 +27,7 @@ namespace bakermaker {
 
     class BaseUIScreen {
     public:
-
-        BaseUIScreen(ProgramStage programStage);
+        explicit BaseUIScreen(ProgramStage programStage);
         virtual void render(ProgramStage& stage) = 0;
     };
 
