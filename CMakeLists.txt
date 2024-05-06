@@ -12,6 +12,7 @@ set(LIBROMFS_RESOURCE_LOCATION ${PROJECT_SOURCE_DIR}/resources)
 add_subdirectory(libs/libromfs)
 
 add_subdirectory(libs/glfw)
+add_subdirectory(libs/json11)
 
 add_executable(bakermaker src/main.cpp libs/imgui/imgui.cpp libs/imgui/imgui_draw.cpp
         libs/imgui/imgui_tables.cpp libs/imgui/imgui_widgets.cpp
@@ -36,6 +37,6 @@ find_package(OpenSSL REQUIRED)
 find_package(libssh REQUIRED)
 
 target_link_libraries(bakermaker PUBLIC glfw opengl32 gdi32 imm32 user32 advapi32 string_theory ${LIBROMFS_LIBRARY}
-    ssh)
+    ssh json11)
 target_include_directories(bakermaker PUBLIC libs/glfw/include libs/imgui
-        libs/imgui/backends ${string_theory_INCLUDE_DIRS} ${LIBSSH_INCLUDE_DIRS} include)
+        libs/imgui/backends libs/json11/include ${string_theory_INCLUDE_DIRS} ${LIBSSH_INCLUDE_DIRS} include)
