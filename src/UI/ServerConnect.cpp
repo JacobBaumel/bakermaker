@@ -14,7 +14,7 @@ namespace bakermaker {
         browser->ClearSelected();
     }
 
-    void ServerConnect::render(bakermaker::ProgramStage& stage) {
+    void ServerConnect::render() {
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Server Connection Information");
         ImGui::PopFont();

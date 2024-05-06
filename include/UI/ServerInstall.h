@@ -14,7 +14,7 @@ namespace bakermaker {
 
     public:
         ServerInstall();
-        void render(bakermaker::ProgramStage& stage) override;
+        void render() override;
     };
 }
 

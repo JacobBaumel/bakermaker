@@ -1,3 +1,5 @@
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+
 #include <iostream>
 
 #include "GLFW/glfw3.h"
@@ -44,7 +46,7 @@ int main() {
 //                    ImGui::BeginDisabled();
                     for(auto& screen : bakermaker::screens) {
 //                        if(screen.first == stage) ImGui::EndDisabled();
-                        screen.second->render(bakermaker::stage);
+                        screen.second->render();
                         ImGui::NewLine();
 //                        if(screen.first == stage) ImGui::BeginDisabled();
                     }

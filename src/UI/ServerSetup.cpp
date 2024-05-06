@@ -1,9 +1,16 @@
 #include "UI/ServerSetup.h"
+#include "setup.h"
 
 namespace bakermaker {
-    ServerSetup::ServerSetup() : BaseUIScreen(bakermaker::ProgramStage::SERVER_SETUP) {}
+    ServerSetup::ServerSetup() : BaseUIScreen(bakermaker::ProgramStage::SERVER_SETUP) {
+        if(config.has("iscsi")) {
+            strcpy(c1, std::string(config["iscsi"][0]).c_str());
+            strcpy(c2, std::string(config["iscsi"][1]).c_str());
+            strcpy(c3, std::string(config["iscsi"][2]).c_str());
+        }
+    }
 
-    void ServerSetup::render(bakermaker::ProgramStage &stage) {
+    void ServerSetup::render() {
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Server Setup");
         ImGui::PopFont();
@@ -11,19 +18,21 @@ namespace bakermaker {
 
         ImGui::Text("iSCSI Command 1: ");
         ImGui::SameLine();
-        ImGui::InputText("##iscsi_1", e, 2);
+        ImGui::InputText("##iscsi_1", c1, BUFFER_LENGTH);
         ImGui::NewLine();
 
         ImGui::Text("iSCSI Command 2: ");
         ImGui::SameLine();
-        ImGui::InputText("##iscsi_2", e, 2);
+        ImGui::InputText("##iscsi_2", c2, BUFFER_LENGTH);
         ImGui::NewLine();
 
         ImGui::Text("iSCSI Command 3: ");
         ImGui::SameLine();
-        ImGui::InputText("##iscsi_3", e, 2);
+        ImGui::InputText("##iscsi_3", c3, BUFFER_LENGTH);
         ImGui::NewLine();
 
-        ImGui::Button("Submit##server_setup");
+        if(ImGui::Button("Submit##server_setup")) {
+            config["iscsi"] = {c1, c2, c3};
+        }
     }
 }

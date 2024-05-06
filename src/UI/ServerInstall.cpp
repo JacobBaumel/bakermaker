@@ -8,7 +8,7 @@ namespace bakermaker {
         instructions = ST::string((const char*) md.data(), md.size());
     }
 
-    void ServerInstall::render(bakermaker::ProgramStage &stage) {
+    void ServerInstall::render() {
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Server Software Install");
         ImGui::PopFont();

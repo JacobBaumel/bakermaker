@@ -1,5 +1,3 @@
-#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
-
 #include <charconv>
 #include "setup.h"
 
@@ -12,11 +10,14 @@
 #include "UI/ServerSetup.h"
 #include "UI/ServerConnect.h"
 #include "UI/ServerInstall.h"
+#include "json11.h"
+#include <fstream>
 
 namespace bakermaker {
     bakermaker::ImguiMarkdownRender* documentation;
     bakermaker::ProgramStage stage = bakermaker::ProgramStage::SERVER_CONNECT;
     ST::string documarkdown;
+    Json config;
 
     void init(GLFWwindow* window) {
         glfwMakeContextCurrent(window);
@@ -36,15 +37,15 @@ namespace bakermaker {
 
         ImFont **fonts = new ImFont *[4];
         {
-            ImFontConfig config;
-            config.FontDataOwnedByAtlas = false;
+            ImFontConfig fontConfig;
+            fontConfig.FontDataOwnedByAtlas = false;
             io.Fonts->Clear();
             romfs::Resource umr = romfs::get("UbuntuMono-Regular.ttf");
-            fonts[0] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 15, &config);
+            fonts[0] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 15, &fontConfig);
             umr = romfs::get("UbuntuMono-Bold.ttf");
-            fonts[1] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 25, &config);
-            fonts[2] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 20, &config);
-            fonts[3] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 18, &config);
+            fonts[1] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 25, &fontConfig);
+            fonts[2] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 20, &fontConfig);
+            fonts[3] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 18, &fontConfig);
         }
 
         bakermaker::fontlist = fonts;
@@ -52,6 +53,11 @@ namespace bakermaker {
         romfs::Resource mdfile = romfs::get("Documentation.md");
         documarkdown = ST::string((char *) mdfile.data(), mdfile.size());
         bakermaker::documentation = new ImguiMarkdownRender(bakermaker::fontlist + 1);
+
+        if(std::filesystem::exists("config.json")) {
+            std::ifstream jsonFile("config.json");
+            jsonFile >> config;
+        }
 
         new bakermaker::ServerSetup();
         new bakermaker::ServerConnect();
@@ -80,6 +86,11 @@ namespace bakermaker {
 
     void shutdown(GLFWwindow *window) {
         delete bakermaker::documentation;
+
+        {
+            std::ofstream jsonFile("config.json");
+            jsonFile << config;
+        }
 
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();

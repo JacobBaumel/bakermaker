@@ -9,11 +9,15 @@
 
 namespace bakermaker {
     class ServerSetup : public BaseUIScreen {
-        char e[2] {' ', '\0'};
+    private:
+        static constexpr int BUFFER_LENGTH = 150;
+        char c1[150]{'\0'};
+        char c2[150]{'\0'};
+        char c3[150]{'\0'};
 
     public:
         ServerSetup();
-        void render(bakermaker::ProgramStage& stage) override;
+        void render() override;
     };
 }
 

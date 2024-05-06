@@ -32,7 +32,7 @@ namespace bakermaker {
 
     public:
         ServerConnect();
-        void render(bakermaker::ProgramStage& stage) override;
+        void render() override;
     };
 }
 
