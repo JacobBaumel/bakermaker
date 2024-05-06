@@ -32,7 +32,7 @@ namespace bakermaker {
                 ((ImguiMarkdownRender*) data.userData)->imageNames.push_back(texture);
                 idata.isValid = true;
                 idata.user_texture_id = reinterpret_cast<ImTextureID>(texture);
-                idata.size = ImVec2((float) width, (float) height);
+                idata.size = ImVec2((float) width / 2, (float) height / 2);
             }
 
             else {
@@ -96,8 +96,7 @@ namespace bakermaker {
         return true;
     }
 
-    ImguiMarkdownRender::ImguiMarkdownRender(ST::string markdown_, ImFont** headerFonts)
-        : markdown(std::move(markdown_)){
+    ImguiMarkdownRender::ImguiMarkdownRender(ImFont** headerFonts) {
         config.linkCallback = &ImguiMarkdownRender::linkCallback;
         config.tooltipCallback = nullptr;
         config.imageCallback = &ImguiMarkdownRender::imageCallback;
@@ -111,7 +110,7 @@ namespace bakermaker {
         glDeleteTextures((int) imageNames.size(), &imageNames[0]);
     }
 
-    void ImguiMarkdownRender::render() {
+    void ImguiMarkdownRender::render(const ST::string& markdown) {
         ImGui::Markdown(markdown.c_str(), markdown.size() - 1, config);
     }
 }

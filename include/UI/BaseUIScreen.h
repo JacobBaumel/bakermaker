@@ -21,8 +21,9 @@ namespace bakermaker {
     void resetIds();
 
     enum class ProgramStage {
+        SERVER_SETUP,
         SERVER_CONNECT,
-        SERVER_SETUP
+        SERVER_INSTALL
     };
 
     class BaseUIScreen {

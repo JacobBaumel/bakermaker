@@ -46,7 +46,7 @@ namespace bakermaker {
         }
 
         ImGui::NewLine();
-        if(ImGui::Button("Submit")) {
+        if(ImGui::Button("Submit##server_connect")) {
             showModal = true;
             sshrc = 1;
             connectDone = false;

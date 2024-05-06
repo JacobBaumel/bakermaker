@@ -9,11 +9,14 @@
 #include "string_theory/string"
 #include "romfs/romfs.hpp"
 #include "UI/BaseUIScreen.h"
+#include "UI/ServerSetup.h"
 #include "UI/ServerConnect.h"
+#include "UI/ServerInstall.h"
 
 namespace bakermaker {
     bakermaker::ImguiMarkdownRender* documentation;
     bakermaker::ProgramStage stage = bakermaker::ProgramStage::SERVER_CONNECT;
+    ST::string documarkdown;
 
     void init(GLFWwindow* window) {
         glfwMakeContextCurrent(window);
@@ -46,12 +49,13 @@ namespace bakermaker {
 
         bakermaker::fontlist = fonts;
 
-        ST::string markdown;
-        romfs::Resource mdfile = romfs::get("test.md");
-        markdown = ST::string((char *) mdfile.data(), mdfile.size());
-        bakermaker::documentation = new ImguiMarkdownRender(markdown, bakermaker::fontlist + 1);
+        romfs::Resource mdfile = romfs::get("Documentation.md");
+        documarkdown = ST::string((char *) mdfile.data(), mdfile.size());
+        bakermaker::documentation = new ImguiMarkdownRender(bakermaker::fontlist + 1);
 
+        new bakermaker::ServerSetup();
         new bakermaker::ServerConnect();
+        new bakermaker::ServerInstall();
     }
 
     void prerender() {

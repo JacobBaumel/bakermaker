@@ -45,6 +45,7 @@ int main() {
                     for(auto& screen : bakermaker::screens) {
 //                        if(screen.first == stage) ImGui::EndDisabled();
                         screen.second->render(bakermaker::stage);
+                        ImGui::NewLine();
 //                        if(screen.first == stage) ImGui::BeginDisabled();
                     }
 
@@ -52,7 +53,8 @@ int main() {
                     ImGui::EndTabItem();
                 }
                 if(ImGui::BeginTabItem("Documentation", &open2, tabitemflags)) {
-                    bakermaker::documentation->render();
+                    ImGui::SetNextItemWidth(ImGui::GetIO().DisplaySize.x / 1.5);
+                    bakermaker::documentation->render(bakermaker::documarkdown);
                     ImGui::EndTabItem();
                 }
 

@@ -17,6 +17,7 @@ namespace ST {
 namespace bakermaker {
     extern ImguiMarkdownRender* documentation;
     extern bakermaker::ProgramStage stage;
+    extern ST::string documarkdown;
 
     void init(GLFWwindow* window);
     void prerender();
