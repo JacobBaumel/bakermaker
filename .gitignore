@@ -1,4 +1,6 @@
-resources/
+resources/*
+!resources/*.png
+!resources/*.md
 
 ##### Windows
 # Windows thumbnail cache files

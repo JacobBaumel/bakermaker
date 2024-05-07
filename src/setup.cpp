@@ -42,9 +42,9 @@ namespace bakermaker {
             ImFontConfig fontConfig;
             fontConfig.FontDataOwnedByAtlas = false;
             io.Fonts->Clear();
-            romfs::Resource umr = romfs::get("UbuntuMono-Regular.ttf");
+            romfs::Resource umr = romfs::get("font-regular.ttf");
             fonts[0] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 15, &fontConfig);
-            umr = romfs::get("UbuntuMono-Bold.ttf");
+            umr = romfs::get("font-bold.ttf");
             fonts[1] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 25, &fontConfig);
             fonts[2] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 20, &fontConfig);
             fonts[3] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 18, &fontConfig);
