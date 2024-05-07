@@ -23,7 +23,9 @@ namespace bakermaker {
     enum class ProgramStage {
         SERVER_SETUP,
         SERVER_CONNECT,
-        SERVER_INSTALL
+        SERVER_INSTALL,
+
+        LIBS_NOT_FOUND
     };
 
     class BaseUIScreen {

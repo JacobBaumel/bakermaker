@@ -3,11 +3,9 @@
 
 namespace bakermaker {
     ServerSetup::ServerSetup() : BaseUIScreen(bakermaker::ProgramStage::SERVER_SETUP) {
-        if(config.has("iscsi")) {
-            strcpy(c1, std::string(config["iscsi"][0]).c_str());
-            strcpy(c2, std::string(config["iscsi"][1]).c_str());
-            strcpy(c3, std::string(config["iscsi"][2]).c_str());
-        }
+        strcpy_s(c1, std::string(config["iscsi"][0]).c_str());
+        strcpy_s(c2, std::string(config["iscsi"][1]).c_str());
+        strcpy_s(c3, std::string(config["iscsi"][2]).c_str());
     }
 
     void ServerSetup::render() {

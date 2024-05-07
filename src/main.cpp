@@ -9,6 +9,7 @@
 #include "romfs/romfs.hpp"
 #include "UI/BaseUIScreen.h"
 #include "UI/ServerConnect.h"
+#include "UI/LibsNotFound.h"
 
 int main() {
     if(!glfwInit()) {
@@ -34,6 +35,18 @@ int main() {
 
     bool open = true, open1 = true, open2 = true;
 
+
+    bool libsfound = true;
+    bakermaker::LibsNotFound* lnf;
+    {
+        HMODULE ssh = LoadLibraryA("ssh.dll");
+        if(ssh == nullptr) {
+            libsfound = false;
+            lnf = new bakermaker::LibsNotFound();
+        }
+        FreeLibrary(ssh);
+    }
+
     while(!glfwWindowShouldClose(window)) {
         bakermaker::resetIds();
         bakermaker::prerender();
@@ -41,26 +54,32 @@ int main() {
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->Size);
         if(ImGui::Begin("Bakermaker", &open, flags)) {
-            if(ImGui::BeginTabBar("##tabbar", tabflags)) {
-                if(ImGui::BeginTabItem("Server Management", &open1, tabitemflags)) {
+            if(!libsfound) {
+                lnf->render();
+            }
+
+            else {
+                if(ImGui::BeginTabBar("##tabbar", tabflags)) {
+                    if(ImGui::BeginTabItem("Server Management", &open1, tabitemflags)) {
 //                    ImGui::BeginDisabled();
-                    for(auto& screen : bakermaker::screens) {
+                        for(auto& screen : bakermaker::screens) {
 //                        if(screen.first == stage) ImGui::EndDisabled();
-                        screen.second->render();
-                        ImGui::NewLine();
+                            screen.second->render();
+                            ImGui::NewLine();
 //                        if(screen.first == stage) ImGui::BeginDisabled();
-                    }
+                        }
 
 //                    ImGui::EndDisabled();
-                    ImGui::EndTabItem();
-                }
-                if(ImGui::BeginTabItem("Documentation", &open2, tabitemflags)) {
-                    ImGui::SetNextItemWidth(ImGui::GetIO().DisplaySize.x / 1.5);
-                    bakermaker::documentation->render(bakermaker::documarkdown);
-                    ImGui::EndTabItem();
-                }
+                        ImGui::EndTabItem();
+                    }
+                    if(ImGui::BeginTabItem("Documentation", &open2, tabitemflags)) {
+                        ImGui::SetNextItemWidth(ImGui::GetIO().DisplaySize.x / 1.5);
+                        bakermaker::documentation->render(bakermaker::documarkdown);
+                        ImGui::EndTabItem();
+                    }
 
-                ImGui::EndTabBar();
+                    ImGui::EndTabBar();
+                }
             }
         }
 

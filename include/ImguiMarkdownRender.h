@@ -20,10 +20,10 @@ namespace bakermaker {
 
         std::map<ST::string, ImGui::MarkdownImageData> images;
         std::vector<GLuint> imageNames;
+        int imageNamesLength = 0;
 
     public:
         explicit ImguiMarkdownRender(ImFont** headerFonts);
-        ~ImguiMarkdownRender();
         void render(const ST::string& markdown);
     };
 }

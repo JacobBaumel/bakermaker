@@ -59,6 +59,10 @@ namespace bakermaker {
             jsonFile >> config;
         }
 
+        else {
+            config["iscsi"] = {"", "", ""};
+        }
+
         new bakermaker::ServerSetup();
         new bakermaker::ServerConnect();
         new bakermaker::ServerInstall();

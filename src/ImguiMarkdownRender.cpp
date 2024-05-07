@@ -30,6 +30,7 @@ namespace bakermaker {
 
             if(success) {
                 ((ImguiMarkdownRender*) data.userData)->imageNames.push_back(texture);
+                ((ImguiMarkdownRender*) data.userData)->imageNamesLength++;
                 idata.isValid = true;
                 idata.user_texture_id = reinterpret_cast<ImTextureID>(texture);
                 idata.size = ImVec2((float) width / 2, (float) height / 2);
@@ -104,10 +105,6 @@ namespace bakermaker {
         config.headingFormats[1] = {headerFonts[1], true};
         config.headingFormats[2] = {headerFonts[2], false};
         config.userData = this;
-    }
-
-    ImguiMarkdownRender::~ImguiMarkdownRender() {
-        glDeleteTextures((int) imageNames.size(), &imageNames[0]);
     }
 
     void ImguiMarkdownRender::render(const ST::string& markdown) {
