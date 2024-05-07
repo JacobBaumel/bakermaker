@@ -6,12 +6,14 @@
 #include "imgui_impl_glfw.h"
 #include "string_theory/string"
 #include "romfs/romfs.hpp"
+#include "json11.h"
+#include <fstream>
+
 #include "UI/BaseUIScreen.h"
 #include "UI/ServerSetup.h"
 #include "UI/ServerConnect.h"
 #include "UI/ServerInstall.h"
-#include "json11.h"
-#include <fstream>
+#include "UI/CreateSSHKeys.h"
 
 namespace bakermaker {
     bakermaker::ImguiMarkdownRender* documentation;
@@ -64,11 +66,13 @@ namespace bakermaker {
             Json server;
             server.set("ip", "").set("port", 22).set("user", "").set("keyfile", "");
             config["server"] = server;
+            config["keys"] = Json::array();
         }
 
         new bakermaker::ServerSetup();
         new bakermaker::ServerConnect();
         new bakermaker::ServerInstall();
+        new bakermaker::CreateSSHKeys();
     }
 
     void prerender() {

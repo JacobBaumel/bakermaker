@@ -10,6 +10,7 @@
 
 namespace bakermaker {
     int createSession(ssh_session& session, const char* ip, const char* user, const char* keyfile, int port = 22);
+    int genSSHKeyToFile(const char* filename);
 }
 
 #endif //TEST_MD_SSH_HELPER_H

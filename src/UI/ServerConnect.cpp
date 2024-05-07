@@ -4,7 +4,7 @@
 #include <iostream>
 #include "improgress.h"
 #include "setup.h"
-#include "string_theory/string";
+#include "string_theory/string"
 
 namespace bakermaker {
     using namespace ST::literals;

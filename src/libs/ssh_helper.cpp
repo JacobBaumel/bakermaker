@@ -63,4 +63,24 @@ namespace bakermaker {
 
         return 0;
     }
+
+    int genSSHKeyToFile(const char* file) {
+        ssh_key key;
+        memset((void*) &key, 0, sizeof(ssh_key));
+        int rc = ssh_pki_generate(ssh_keytypes_e::SSH_KEYTYPE_ED25519, 4096, &key);
+        if(rc != SSH_OK) return -1;
+
+        rc = ssh_pki_export_privkey_file(key, nullptr, nullptr, nullptr, file);
+        if(rc != SSH_OK) return -2;
+
+        ssh_key pub;
+        memset((void*) &pub, 0, sizeof(ssh_key));
+        rc = ssh_pki_export_privkey_to_pubkey(key, &pub);
+        if(rc != SSH_OK) return -3;
+
+        rc = ssh_pki_export_pubkey_file(pub, ((ST::string(file) + ".p")).c_str());
+        if(rc != SSH_OK) return -4;
+
+        return 0;
+    }
 }
