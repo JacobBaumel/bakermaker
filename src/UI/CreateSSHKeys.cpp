@@ -88,9 +88,22 @@ namespace bakermaker {
 
         if(hasConfirmed) {
             ImGui::Text("Generating keys: %i / %llu", execProgress.load(), execTotal.load());
-            ImGui::SameLine();
-            ImGui::Spinner("##libs_extract", 10, 1,
-                           ImGui::GetColorU32(ImVec4(0.1, 0.1, 0.75, 1)));
+
+            if(!execDone) {
+                ImGui::SameLine();
+                ImGui::Spinner("##libs_extract", 10, 1,
+                               ImGui::GetColorU32(ImVec4(0.1, 0.1, 0.75, 1)));
+            }
+
+            else {
+                if(exec != nullptr) {
+                    exec->join();
+                    delete exec;
+                    exec = nullptr;
+                }
+
+                ImGui::Text("Key Generation Complete");
+            }
         }
     }
 }

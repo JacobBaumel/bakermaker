@@ -12,7 +12,7 @@ set(LIBROMFS_RESOURCE_LOCATION ${PROJECT_SOURCE_DIR}/resources)
 add_subdirectory(libs/libromfs)
 
 set(LIBZIP_DO_INSTALL OFF)
-set(BUILD_SHARED_LIBS OFF)
+#set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(libs/miniz)
 
 add_subdirectory(libs/glfw)
