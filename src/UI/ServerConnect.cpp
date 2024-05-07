@@ -3,6 +3,8 @@
 #include "UI/BaseUIScreen.h"
 #include <iostream>
 #include "improgress.h"
+#include "setup.h"
+#include "string_theory/string";
 
 namespace bakermaker {
     using namespace ST::literals;
@@ -12,6 +14,13 @@ namespace bakermaker {
         browser = new ImGui::FileBrowser(FILE_PICKER_FLAGS);
         browser->SetTitle("Choose SSH Private Key");
         browser->ClearSelected();
+
+        strcpy_s(ip, std::string(config["server"]["ip"]).c_str());
+        strcpy_s(user, std::string(config["server"]["user"]).c_str());
+        port = int(config["server"]["port"]);
+
+        ST::string path = std::string(config["server"]["user"]);
+        browser->SetPwd(path.empty() ? std::filesystem::current_path() : path.c_str());
     }
 
     void ServerConnect::render() {
@@ -41,8 +50,7 @@ namespace bakermaker {
         ImGui::NewLine();
         if(ImGui::Button("Browse for server private key")) browser->Open();
         if(browser->HasSelected()) {
-            ST::string words = "Selected File: "_st + browser->GetSelected().c_str();
-            ImGui::Text(words.c_str());
+            ImGui::Text("Selected File: %s", browser->GetSelected().string().c_str());
         }
 
         ImGui::NewLine();
@@ -83,9 +91,16 @@ namespace bakermaker {
                         connectThread->join();
                         delete connectThread;
                         connectThread = nullptr;
+
+                        config["server"]["ip"] = ip;
+                        config["server"]["port"] = port;
+                        config["server"]["user"] = user;
+                        config["server"]["keyfile"] = browser->GetSelected().string();
                     }
 
-                    ImGui::PushStyleColor(ImGuiCol_Text, sshrc == 0 ? ImVec4(0, 1, 0, 1) : ImVec4(1, 0, 0, 1));
+                    ImGui::PushStyleColor(ImGuiCol_Text, sshrc == 0 ?
+                        ImVec4(0, 1, 0, 1) : ImVec4(1, 0, 0, 1));
+
                     switch(sshrc) {
                         case 0:
                             ImGui::Text("Success!");
