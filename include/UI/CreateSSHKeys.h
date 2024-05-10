@@ -7,7 +7,7 @@
 
 #include "UI/BaseUIScreen.h"
 #include "string_theory/string"
-#include <map>
+#include <vector>
 #include <thread>
 #include <atomic>
 
@@ -15,15 +15,16 @@ namespace bakermaker {
     class CreateSSHKeys : public BaseUIScreen {
     private:
         static constexpr int USERLENGTH = 65;
+        static void createUser(const char* name, std::atomic_int* success);
+        static void deleteUser(const char* name, std::atomic_int* success);
+
         ST::string instructions;
-        char adminname[USERLENGTH]{'\0'};
-        std::map<char*, bool*> users;
-        bool hasConfirmed;
+        std::vector<char*> users;
+
+        char* newName;
 
         std::thread* exec;
-        std::atomic_bool execDone;
-        std::atomic_int execProgress;
-        std::atomic_size_t execTotal;
+        std::atomic_int success;
 
 
     public:

@@ -23,8 +23,8 @@ namespace bakermaker {
     enum class ProgramStage {
         SERVER_SETUP,
         SERVER_CONNECT,
-        SSH_KEYGEN,
         SERVER_INSTALL,
+        SSH_KEYGEN,
 
         LIBS_NOT_FOUND
     };

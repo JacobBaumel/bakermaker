@@ -67,6 +67,7 @@ namespace bakermaker {
             server.set("ip", "").set("port", 22).set("user", "ubuntu").set("keyfile", "");
             config["server"] = server;
             config["keys"] = Json::array();
+            config["users"] = Json::array();
         }
 
         new bakermaker::ServerSetup();

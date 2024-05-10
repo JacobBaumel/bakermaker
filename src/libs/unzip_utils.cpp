@@ -20,6 +20,8 @@ namespace bakermaker {
                 mz_zip_reader_extract_file_to_file(&arch, archname, archname, 0);
         }
 
+        mz_free(&arch);
+
         return true;
     }
 }

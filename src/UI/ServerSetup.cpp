@@ -14,6 +14,11 @@ namespace bakermaker {
         ImGui::PopFont();
         ImGui::Separator();
 
+        ImGui::Text("Use iSCSI Storage");
+        ImGui::SameLine();
+        ImGui::Checkbox("##useiscsi", &useiscsi);
+
+        if(!useiscsi) ImGui::BeginDisabled();
         ImGui::Text("iSCSI Command 1: ");
         ImGui::SameLine();
         ImGui::InputText("##iscsi_1", c1, BUFFER_LENGTH);
@@ -32,5 +37,7 @@ namespace bakermaker {
         if(ImGui::Button("Submit##server_setup")) {
             config["iscsi"] = {c1, c2, c3};
         }
+
+        if(!useiscsi) ImGui::EndDisabled();
     }
 }

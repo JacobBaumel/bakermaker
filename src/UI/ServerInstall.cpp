@@ -5,13 +5,12 @@
 #include "libssh/sftp.h"
 #include "ssh_helper.h"
 
-#include "UI/InstallCommands.inc"
-
 #include <iostream>
 
 namespace bakermaker {
     ServerInstall::ServerInstall() : BaseUIScreen(bakermaker::ProgramStage::SERVER_INSTALL),
-        execDone(false), execProgress(0), bufferMutex(), hasStartedExec(false), showCommandOutputs(false) {
+        execDone(false), execProgress(0), bufferMutex(), hasStartedExec(false), showCommandOutputs(false),
+        exec(nullptr) {
         romfs::Resource md = romfs::get("ServerInstallText.md");
         instructions = ST::string((const char*) md.data(), md.size());
     }
@@ -52,6 +51,7 @@ namespace bakermaker {
 
                 uploadToRemote(sftp, (ST::string("keys/") +
                     std::string(config["keys"][0]["name"]) + ".pub").c_str(), "authorized_keys");
+
                 uploadToRemote(sftp, (ST::string("keys/") + std::string(config["keys"][0]["name"])).c_str(), "gito");
 
                 runSSHCommand(ubuntu, "sudo mkdir /home/git/.ssh; echo 'Created .ssh folder'");
