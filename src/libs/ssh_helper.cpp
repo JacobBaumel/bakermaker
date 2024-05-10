@@ -1,5 +1,9 @@
+#include "libssh/libssh.h"
+#include "libssh/sftp.h"
 #include "ssh_helper.h"
 #include <iostream>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 namespace bakermaker {
     int createSession(ssh_session& session, const char* ip, const char* user, const char* keyfile, int port) {
@@ -78,8 +82,33 @@ namespace bakermaker {
         rc = ssh_pki_export_privkey_to_pubkey(key, &pub);
         if(rc != SSH_OK) return -3;
 
-        rc = ssh_pki_export_pubkey_file(pub, ((ST::string(file) + ".p")).c_str());
+        rc = ssh_pki_export_pubkey_file(pub, ((ST::string(file) + ".pub")).c_str());
         if(rc != SSH_OK) return -4;
+
+        return 0;
+    }
+
+    int uploadToRemote(sftp_session s, const char* filepath, const char* remotepath) {
+        sftp_file file = sftp_open(s, remotepath, O_WRONLY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE | S_IEXEC);
+
+        if(file == nullptr) return -1;
+
+        FILE* localfile;
+        fopen_s(&localfile, filepath, "r");
+
+        if(localfile == nullptr) return -2;
+
+        char buffer[256];
+        size_t nbytes = fread_s(buffer, 256, 1, 256, localfile);
+        while(nbytes > 0) {
+            sftp_write(file, buffer, nbytes);
+            nbytes = fread_s(buffer, 256, 1, 256, localfile);
+        }
+
+        {
+            int rc = sftp_close(file);
+            if(rc != SSH_OK) return -3;
+        }
 
         return 0;
     }

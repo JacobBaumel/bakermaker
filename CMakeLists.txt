@@ -4,15 +4,11 @@ project(bakermaker)
 include(${CMAKE_TOOLCHAIN_FILE})
 set(CMAKE_CXX_STANDARD 20)
 
-#set(OPENSSL_USE_STATIC_LIBS TRUE)
-#add_definitions(-DLIBSSH_STATIC=1)
-
 set(LIBROMFS_PROJECT_NAME bakermaker)
 set(LIBROMFS_RESOURCE_LOCATION ${PROJECT_SOURCE_DIR}/resources)
 add_subdirectory(libs/libromfs)
 
 set(LIBZIP_DO_INSTALL OFF)
-#set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(libs/miniz)
 
 add_subdirectory(libs/glfw)

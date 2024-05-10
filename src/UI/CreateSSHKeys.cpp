@@ -63,6 +63,9 @@ namespace bakermaker {
             config["keys"][0]["name"] = adminname;
             config["keys"][0]["perm"] = 0;
 
+            bool yes = true;
+            users[adminname] = &yes;
+
             for(const auto& entry : users) {
                 int length = Json(config["keys"]).size();
                 Json(config["keys"]) << Json::object();

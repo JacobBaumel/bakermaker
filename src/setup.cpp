@@ -64,7 +64,7 @@ namespace bakermaker {
         else {
             config["iscsi"] = {"", "", ""};
             Json server;
-            server.set("ip", "").set("port", 22).set("user", "").set("keyfile", "");
+            server.set("ip", "").set("port", 22).set("user", "ubuntu").set("keyfile", "");
             config["server"] = server;
             config["keys"] = Json::array();
         }

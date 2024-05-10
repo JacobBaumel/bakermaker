@@ -9,11 +9,14 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include "libssh/libssh.h"
 
 namespace bakermaker {
     class ServerInstall : public BaseUIScreen {
     private:
         static constexpr char SEPARATOR_STR[63] = "\n\n---------------------------------------------------------\n\n\0";
+        void runSSHCommand(ssh_session sess, const char* command);
+        void startNewCommand(const char* command);
 
         char e[1] = {' '};
         ST::string instructions;

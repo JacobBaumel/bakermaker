@@ -2,6 +2,7 @@
 #include "romfs/romfs.hpp"
 #include "setup.h"
 #include "libssh/libssh.h"
+#include "libssh/sftp.h"
 #include "ssh_helper.h"
 
 #include "UI/InstallCommands.inc"
@@ -28,41 +29,62 @@ namespace bakermaker {
             hasStartedExec = true;
 
             exec = new std::thread([this](){
-                ssh_session ses;
-                memset((void*) &ses, 0, sizeof(ssh_session));
-                bakermaker::createSession(ses, std::string(config["server"]["ip"]).c_str(),
-                                          std::string(config["server"]["user"]).c_str(),
-                                          std::string(config["server"]["keyfile"]).c_str(), 0);
+                ssh_session ubuntu;
+                memset((void*) &ubuntu, 0, sizeof(ssh_session));
+                {
+                    int rc = bakermaker::createSession(ubuntu, std::string(config["server"]["ip"]).c_str(),
+                                                       std::string(config["server"]["user"]).c_str(),
+                                                       std::string(config["server"]["keyfile"]).c_str());
 
-                ssh_channel ch;
-                char buffer[256];
-                int nbytes = 0;
-
-                for(const auto& cmd : bakermaker::commands) {
-                    curcmd.lock();
-                    curcmdstr = cmd;
-                    curcmd.unlock();
-
-                    bufferMutex.lock();
-                    commandProgress.append(SEPARATOR_STR);
-                    bufferMutex.unlock();
-
-                    ch = ssh_channel_new(ses);
-                    ssh_channel_open_session(ch);
-                    ssh_channel_request_exec(ch, cmd);
-
-                    nbytes = ssh_channel_read(ch, buffer, sizeof(buffer), 0);
-                    while(nbytes > 0) {
-                        bufferMutex.lock();
-                        commandProgress.append(buffer, buffer + nbytes);
-                        bufferMutex.unlock();
-                        nbytes = ssh_channel_read(ch, buffer, sizeof(buffer), 0);
+                    if(rc != SSH_OK) {
+                        return;
                     }
-
-                    ssh_channel_send_eof(ch);
-                    ssh_channel_close(ch);
-                    ssh_channel_free(ch);
                 }
+
+                sftp_session sftp;
+                sftp = sftp_new(ubuntu);
+                sftp_init(sftp);
+
+                runSSHCommand(ubuntu, "sudo apt update");
+                runSSHCommand(ubuntu, "sudo apt upgrade -y");
+                runSSHCommand(ubuntu, "sudo apt install git -y");
+                runSSHCommand(ubuntu, "sudo adduser --gecos \"\" --disabled-password git");
+
+                uploadToRemote(sftp, (ST::string("keys/") +
+                    std::string(config["keys"][0]["name"]) + ".pub").c_str(), "authorized_keys");
+                uploadToRemote(sftp, (ST::string("keys/") + std::string(config["keys"][0]["name"])).c_str(), "gito");
+
+                runSSHCommand(ubuntu, "sudo mkdir /home/git/.ssh; echo 'Created .ssh folder'");
+                runSSHCommand(ubuntu, "sudo cp /home/ubuntu/authorized_keys "
+                                      "/home/git/.ssh/authorized_keys; echo 'Moved authorized_keys file'");
+                runSSHCommand(ubuntu, "sudo chown -R git:git /home/git/.ssh; echo 'Changed .ssh ownership'");
+                runSSHCommand(ubuntu, "sudo chown -R git:git /home/git/.ssh/authorized_keys;"
+                                      " echo 'Changed authorized_keys ownership'");
+                runSSHCommand(ubuntu, "sudo chmod 700 /home/git/.ssh; echo 'Changed .ssh folder perms'");
+                runSSHCommand(ubuntu, "sudo chmod 644 /home/git/.ssh/authorized_keys; echo 'Changed keys perms'");
+                runSSHCommand(ubuntu, "mkdir -p .ssh");
+                runSSHCommand(ubuntu, "mv ./authorized_keys .ssh/gito");
+                runSSHCommand(ubuntu, (ST::string("echo 'Host gito\n\tHostName ") +
+                    std::string(config["server"]["ip"]) + "\n\tUser git\n\tIdentityFile ~/.ssh/gito' > .ssh/config").c_str());
+
+                ssh_session git;
+                {
+                    int rc = bakermaker::createSession(git, std::string(config["server"]["ip"]).c_str(),
+                                                       "git",(ST::string("keys/") +
+                                                       std::string(config["keys"][0]["name"])).c_str());
+
+                    if(rc != SSH_OK) return;
+                }
+
+                runSSHCommand(git, "mkdir /home/git/bin");
+                runSSHCommand(git, (ST::string("mv .ssh/authorized_keys ./") +
+                    std::string(config["keys"][0]["name"]) + ".p").c_str());
+                runSSHCommand(git, "git clone https://github.com/sitaramc/gitolite");
+                runSSHCommand(git, "git config --global --add safe.directory /home/git/gitolite");
+                runSSHCommand(git, "gitolite/install -ln /home/git/bin");
+                runSSHCommand(git, (ST::string("bin/gitolite setup -pk ") + std::string(config["keys"][0]["name"])).c_str());
+
+                runSSHCommand(ubuntu, "git clone gito:gitolite-admin");
 
                 curcmd.lock();
                 curcmdstr = "Finished";
@@ -72,8 +94,8 @@ namespace bakermaker {
                 commandProgress.append(SEPARATOR_STR);
                 bufferMutex.unlock();
 
-                ssh_disconnect(ses);
-                ssh_free(ses);
+                ssh_disconnect(ubuntu);
+                ssh_free(ubuntu);
             });
         }
 
@@ -107,5 +129,38 @@ namespace bakermaker {
         }
 
 
+    }
+
+    void ServerInstall::runSSHCommand(ssh_session ses, const char *command) {
+        startNewCommand(command);
+
+        ssh_channel ch = ssh_channel_new(ses);
+        ssh_channel_open_session(ch);
+        ssh_channel_request_exec(ch, command);
+
+        char buffer[256];
+        int nbytes;
+
+        nbytes = ssh_channel_read(ch, buffer, sizeof(buffer), 0);
+        while(nbytes > 0) {
+            bufferMutex.lock();
+            commandProgress.append(buffer, buffer + nbytes);
+            bufferMutex.unlock();
+            nbytes = ssh_channel_read(ch, buffer, sizeof(buffer), 0);
+        }
+
+        ssh_channel_send_eof(ch);
+        ssh_channel_close(ch);
+        ssh_channel_free(ch);
+    }
+
+    void ServerInstall::startNewCommand(const char *command) {
+        curcmd.lock();
+        curcmdstr = command;
+        curcmd.unlock();
+
+        bufferMutex.lock();
+        commandProgress.append(SEPARATOR_STR);
+        bufferMutex.unlock();
     }
 }

@@ -6,10 +6,12 @@
 #define BAKERMAKER_INSTALLCOMMANDS_INC
 
 namespace bakermaker {
-    static constexpr int COMMANDS_LENGTH = 2;
-    static constexpr char commands[COMMANDS_LENGTH][32] = {
+    static constexpr int COMMANDS_LENGTH = 10;
+    static constexpr char commands[COMMANDS_LENGTH][64] = {
             "sudo apt update",
-            "sudo apt upgrade -y"};
+            "sudo apt upgrade -y",
+            "sudo apt install git -y",
+            "sudo adduser --gecos \"\" --disabled-password git"};
 }
 
 #endif //BAKERMAKER_INSTALLCOMMANDS_INC
