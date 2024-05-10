@@ -1,5 +1,5 @@
 #include "UI/ServerSetup.h"
-#include "setup.h"
+#include "utils.h"
 
 namespace bakermaker {
     ServerSetup::ServerSetup() : BaseUIScreen(bakermaker::ProgramStage::SERVER_SETUP) {

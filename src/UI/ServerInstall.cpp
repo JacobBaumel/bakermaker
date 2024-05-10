@@ -1,6 +1,6 @@
 #include "UI/ServerInstall.h"
 #include "romfs/romfs.hpp"
-#include "setup.h"
+#include "utils.h"
 #include "libssh/libssh.h"
 #include "libssh/sftp.h"
 #include "ssh_helper.h"

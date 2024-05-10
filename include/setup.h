@@ -11,10 +11,6 @@
 #include "UI/BaseUIScreen.h"
 #include "json11.h"
 
-namespace ST {
-    string operator+(const string& str, int num);
-}
-
 namespace bakermaker {
     extern ImguiMarkdownRender* documentation;
     extern bakermaker::ProgramStage stage;
