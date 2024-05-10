@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "improgress.h"
 
 namespace ST {
     string operator+(const string& str, int num) {
@@ -27,5 +28,42 @@ namespace ST {
 }
 
 namespace bakermaker {
+    static constexpr ImVec2 MODAL_SIZE{525, 130};
+    static char* error;
+    static bool showErrorModal;
+
+    void startErrorModal(const char* errormsg) {
+        if(error != nullptr) delete[] error;
+        size_t len = strlen(errormsg);
+        error = new char[len];
+        memcpy(error, errormsg, len);
+        error[len] = '\0';
+        showErrorModal = true;
+    }
+
+    void displayErrorModal() {
+        if(showErrorModal) {
+            ImGui::SetNextWindowSize(MODAL_SIZE);
+            ImGui::SetNextWindowFocus();
+            ImVec2 screenSize = ImGui::GetIO().DisplaySize;
+            screenSize.x = (screenSize.x - MODAL_SIZE.x) / 2;
+            screenSize.y = (screenSize.y - MODAL_SIZE.y) / 2;
+            ImGui::SetNextWindowPos(screenSize);
+            if(ImGui::Begin("Error Modal", &showErrorModal, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove)) {
+                ImGui::Text("Encountered an error:");
+                ImGui::TextUnformatted(error);
+                if(ImGui::Button("Close")) showErrorModal = false;
+            }
+
+            ImGui::End();
+        }
+    }
+
+    void spinner() {
+        static int spinnerid = 0;
+        spinnerid = (spinnerid + 1) % 1000;
+        ImGui::Spinner((ST::string("##spinner") + spinnerid).c_str(), 8, 1,
+                       ImGui::GetColorU32(ImVec4(0.1, 0.1, 0.75, 1)));
+    }
 
 }

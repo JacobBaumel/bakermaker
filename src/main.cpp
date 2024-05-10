@@ -10,6 +10,7 @@
 #include "UI/BaseUIScreen.h"
 #include "UI/ServerConnect.h"
 #include "UI/LibsNotFound.h"
+#include "utils.h"
 
 int main() {
     if(!glfwInit()) {
@@ -61,15 +62,13 @@ int main() {
             else {
                 if(ImGui::BeginTabBar("##tabbar", tabflags)) {
                     if(ImGui::BeginTabItem("Server Management", &open1, tabitemflags)) {
-//                    ImGui::BeginDisabled();
+                        if(ImGui::Button("error")) bakermaker::startErrorModal("this is a test error");
                         for(auto& screen : bakermaker::screens) {
-//                        if(screen.first == stage) ImGui::EndDisabled();
                             screen.second->render();
                             ImGui::NewLine();
-//                        if(screen.first == stage) ImGui::BeginDisabled();
                         }
 
-//                    ImGui::EndDisabled();
+                        bakermaker::displayErrorModal();
                         ImGui::EndTabItem();
                     }
                     if(ImGui::BeginTabItem("Documentation", &open2, tabitemflags)) {

@@ -1,7 +1,7 @@
 #include "UI/CreateSSHKeys.h"
 #include "UI/BaseUIScreen.h"
 #include "romfs/romfs.hpp"
-#include "setup.h"
+#include "utils.h"
 #include <filesystem>
 #include "ssh_helper.h"
 #include <iostream>
@@ -45,8 +45,7 @@ namespace bakermaker {
         if(success == 1) {
             ImGui::EndDisabled();
             ImGui::SameLine();
-            ImGui::Spinner("##adduser_laod", 10, 1,
-                           ImGui::GetColorU32(ImVec4(0.1, 0.1, 0.75, 1)));
+            bakermaker::spinner();
         }
 
         if(success == 0 && exec != nullptr) {

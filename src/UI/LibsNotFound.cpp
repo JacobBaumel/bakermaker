@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include "unzip_utils.h"
+#include "utils.h"
 
 namespace bakermaker {
     LibsNotFound::LibsNotFound() : BaseUIScreen(bakermaker::ProgramStage::LIBS_NOT_FOUND),
@@ -29,8 +30,7 @@ namespace bakermaker {
             ImGui::Text("Extracting Libraries");
             if(!extrDone) {
                 ImGui::SameLine();
-                ImGui::Spinner("##libs_extract", 10, 1,
-                               ImGui::GetColorU32(ImVec4(0.1, 0.1, 0.75, 1)));
+                bakermaker::spinner();
             }
 
             else ImGui::Text("Library Extraction Complete. Please restart the program.");

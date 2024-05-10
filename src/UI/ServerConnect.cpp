@@ -2,7 +2,6 @@
 #include "UI/ServerConnect.h"
 #include "UI/BaseUIScreen.h"
 #include <iostream>
-#include "improgress.h"
 #include "utils.h"
 #include "string_theory/string"
 
@@ -10,7 +9,7 @@ namespace bakermaker {
     using namespace ST::literals;
 
     ServerConnect::ServerConnect() : BaseUIScreen(bakermaker::ProgramStage::SERVER_CONNECT),
-        connectDone(false) {
+                                     execDone(false) {
         browser = new ImGui::FileBrowser(FILE_PICKER_FLAGS);
         browser->SetTitle("Choose SSH Private Key");
         browser->ClearSelected();
@@ -53,12 +52,13 @@ namespace bakermaker {
             ImGui::Text("Selected File: %s", browser->GetSelected().string().c_str());
         }
 
+        if(exec && !execDone) ImGui::BeginDisabled();
+
         ImGui::NewLine();
         if(ImGui::Button("Submit##server_connect")) {
-            showModal = true;
             sshrc = 1;
-            connectDone = false;
-            connectThread = new std::thread([this](){
+            execDone = false;
+            exec = new std::thread([this](){
                 ssh_session session;
                 ST::string path = browser->GetSelected().string();
                 sshrc = createSession(session, ip, user, path.c_str(), port);
@@ -66,76 +66,55 @@ namespace bakermaker {
                     ssh_disconnect(session);
                     ssh_free(session);
                 }
-                connectDone = true;
+                execDone = true;
             });
         }
 
-        if(showModal) {
-            ImGui::SetNextWindowFocus();
-            ImGui::SetNextWindowSize(MODAL_SIZE);
-            ImVec2 screenSize = ImGui::GetIO().DisplaySize;
-            screenSize.x = (screenSize.x - MODAL_SIZE.x) / 2;
-            screenSize.y = (screenSize.y - MODAL_SIZE.y) / 2;
-            ImGui::SetNextWindowPos(screenSize);
-            if(ImGui::Begin("Test Modal", &showModal, modalFlags)) {
-                ImGui::NewLine();
-                ImGui::Text("Testing connectivity to remote server ...");
-                if(sshrc == 1) {
-                    ImGui::SameLine(0, 15);
-                    ImGui::Spinner("##connect_load", 10, 1,
-                                   ImGui::GetColorU32(ImVec4(0.1, 0.1, 0.75, 1)));
-                }
+        if(exec && !execDone) {
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            bakermaker::spinner();
+        }
 
-                if(connectDone) {
-                    if(connectThread != nullptr) {
-                        connectThread->join();
-                        delete connectThread;
-                        connectThread = nullptr;
+        if(execDone) {
+            if(exec) {
+                exec->join();
+                delete exec;
+                exec = nullptr;
 
-                        config["server"]["ip"] = ip;
-                        config["server"]["port"] = port;
-                        config["server"]["user"] = user;
-                        config["server"]["keyfile"] = browser->GetSelected().string();
-                    }
+                config["server"]["ip"] = ip;
+                config["server"]["port"] = port;
+                config["server"]["user"] = user;
+                config["server"]["keyfile"] = browser->GetSelected().string();
 
-                    ImGui::PushStyleColor(ImGuiCol_Text, sshrc == 0 ?
-                        ImVec4(0, 1, 0, 1) : ImVec4(1, 0, 0, 1));
+                switch(sshrc) {
+                    case -1:
+                        bakermaker::startErrorModal("Could not initialize SSH Session. Application Error. (-1)");
+                        break;
 
-                    switch(sshrc) {
-                        case 0:
-                            ImGui::Text("Success!");
-                            break;
+                    case -2:
+                        bakermaker::startErrorModal("Could not connect to SSH server (-2)");
+                        break;
 
-                        case -1:
-                            ImGui::Text("Could not initialize SSH Session. Application Error. (-1)");
-                            break;
+                    case -3:
+                        bakermaker::startErrorModal("Error processing public key (-3)");
+                        break;
 
-                        case -2:
-                            ImGui::Text("Could not connect to SSH server (-2)");
-                            break;
+                    case -4:
+                        bakermaker::startErrorModal("Error processing private key (-4)");
+                        break;
 
-                        case -3:
-                            ImGui::Text("Error processing public key (-3)");
-                            break;
-
-                        case -4:
-                            ImGui::Text("Error processing private key (-4)");
-                            break;
-
-                        case -5:
-                            ImGui::Text("Could not read private key file (-5)");
-                            break;
-                    }
-
-                    ImGui::PopStyleColor(1);
-
-                    if(ImGui::Button("OK")) {
-                        showModal = false;
-                    }
+                    case -5:
+                        bakermaker::startErrorModal("Could not read private key file (-5)");
+                        break;
                 }
             }
 
-            ImGui::End();
+            if(sshrc == 0) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+                ImGui::Text("Success!");
+                ImGui::PopStyleColor();
+            }
         }
     }
 }

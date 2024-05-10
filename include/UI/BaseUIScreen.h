@@ -9,15 +9,9 @@
 #include "string_theory/string"
 #include "imgui.h"
 
-namespace ST {
-    string operator+(const string& str, int num);
-}
-
 namespace bakermaker {
     extern ImFont** fontlist;
     extern int latestId;
-    const char* appendId(ST::string string);
-    const char* appendId(const char*);
     void resetIds();
 
     enum class ProgramStage {
