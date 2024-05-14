@@ -14,6 +14,7 @@
 #include "UI/ServerConnect.h"
 #include "UI/ServerInstall.h"
 #include "UI/CreateSSHKeys.h"
+#include "UI/RepoManage.h"
 
 namespace bakermaker {
     bakermaker::ImguiMarkdownRender* documentation;
@@ -74,6 +75,7 @@ namespace bakermaker {
         new bakermaker::ServerConnect();
         new bakermaker::ServerInstall();
         new bakermaker::CreateSSHKeys();
+        new bakermaker::RepoManage();
     }
 
     void prerender() {

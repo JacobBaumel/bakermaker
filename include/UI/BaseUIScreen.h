@@ -19,6 +19,7 @@ namespace bakermaker {
         SERVER_CONNECT,
         SERVER_INSTALL,
         SSH_KEYGEN,
+        REPO_MANAGE,
 
         LIBS_NOT_FOUND
     };

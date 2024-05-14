@@ -10,7 +10,7 @@
 
 namespace bakermaker {
     CreateSSHKeys::CreateSSHKeys() : BaseUIScreen(bakermaker::ProgramStage::SSH_KEYGEN),
-                                     exec(nullptr), success(0), newName(new char[64]{'\0'}) {
+        exec(nullptr), success(0), newName(new char[64]{'\0'}), execDone(false) {
         romfs::Resource text = romfs::get("SSHKeyGen.md");
         instructions = ST::string((char*) text.data(), text.size());
 
@@ -28,34 +28,46 @@ namespace bakermaker {
         ImGui::NewLine();
 
         ImGui::Text("Name: ");
-        if(success == 1) ImGui::BeginDisabled();
+        if(exec && !execDone) ImGui::BeginDisabled();
         ImGui::SetNextItemWidth(600);
         ImGui::InputText("##newuserenter", newName, 64);
         ImGui::SameLine();
 
         if(ImGui::Button("Add User")) {
-            if(std::find(users.begin(), users.end(), newName) != users.end()) {
-
+            execDone = false;
+            if(std::find(users.begin(), users.end(), std::string(newName)) != users.end()) {
+                bakermaker::startErrorModal((ST::string("User ") + newName + " has already been added.").c_str());
             }
             else {
-                success = 1;
-                exec = new std::thread(&CreateSSHKeys::createUser, newName, &success);
+                exec = new std::thread(&CreateSSHKeys::createUser, newName, &execDone, &success, &users);
             }
         }
-        if(success == 1) {
+
+        if(exec && !execDone) {
             ImGui::EndDisabled();
             ImGui::SameLine();
             bakermaker::spinner();
         }
 
-        if(success == 0 && exec != nullptr) {
-            exec->join();
-            delete exec;
-            exec = nullptr;
-            size_t len = strlen(newName);
-            char* name = new char[len + 1];
-            memcpy(name, newName, len);
-            users.push_back(name);
+        if(execDone) {
+            if(exec) {
+                exec->join();
+                delete exec;
+                exec = nullptr;
+
+                switch(success) {
+                    case 1:
+                        bakermaker::startErrorModal("Error when adding user");
+                        break;
+
+                    case -1:
+                        bakermaker::startErrorModal("Error when deleting user");
+                }
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+            ImGui::Text("Success!");
+            ImGui::PopStyleColor();
         }
 
         ImGui::NewLine();
@@ -71,16 +83,13 @@ namespace bakermaker {
                 ImGui::TableNextColumn();
                 ImGui::Text("%s", name);
                 ImGui::TableNextColumn();
-                ImGui::Button("Delete");
+                if(ImGui::Button((ST::string("Delete##") + name).c_str())) {
+                    execDone = false;
+                    exec = new std::thread(&CreateSSHKeys::deleteUser, name, &execDone, &success, &users);
+                }
             }
             ImGui::EndTable();
         }
-
-
-
-
-
-
 
 
 //
@@ -168,15 +177,29 @@ namespace bakermaker {
 //        }
     }
 
-    void CreateSSHKeys::createUser(const char* name, std::atomic_int* success) {
+    void CreateSSHKeys::createUser(const char* name, std::atomic_bool* execDone,
+                                   std::atomic_int* success, std::vector<char*>* users) {
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(2000ms);
+
+        size_t len = strlen(name);
+        char* namec = new char[len];
+        namec[len] = '\0';
+        memcpy(namec, name, len);
+        users->push_back(namec);
+
         *success = 0;
+        *execDone = true;
     }
 
-    void CreateSSHKeys::deleteUser(const char* name, std::atomic_int* success) {
+    void CreateSSHKeys::deleteUser(const char* name, std::atomic_bool* execDone,
+                                   std::atomic_int* success, std::vector<char*>* users) {
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(2000ms);
+
+        users->erase(std::find(users->begin(), users->end(), std::string(name)));
+
         *success = 0;
+        *execDone = true;
     }
 }
