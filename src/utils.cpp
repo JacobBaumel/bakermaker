@@ -29,15 +29,11 @@ namespace ST {
 
 namespace bakermaker {
     static constexpr ImVec2 MODAL_SIZE{525, 130};
-    static char* error;
+    ST::string error;
     static bool showErrorModal;
 
     void startErrorModal(const char* errormsg) {
-        if(error != nullptr) delete[] error;
-        size_t len = strlen(errormsg);
-        error = new char[len];
-        memcpy(error, errormsg, len);
-        error[len] = '\0';
+        error = errormsg;
         showErrorModal = true;
     }
 
@@ -51,7 +47,7 @@ namespace bakermaker {
             ImGui::SetNextWindowPos(screenSize);
             if(ImGui::Begin("Error Modal", &showErrorModal, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove)) {
                 ImGui::Text("Encountered an error:");
-                ImGui::TextUnformatted(error);
+                ImGui::TextUnformatted(error.c_str());
                 if(ImGui::Button("Close")) showErrorModal = false;
             }
 
