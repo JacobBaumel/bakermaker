@@ -68,6 +68,7 @@ namespace bakermaker {
                 }
                 execDone = true;
             });
+            ImGui::BeginDisabled();
         }
 
         if(exec && !execDone) {

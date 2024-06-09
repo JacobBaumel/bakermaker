@@ -48,6 +48,7 @@ namespace bakermaker {
         char newrepo[NEW_REPO_NAME_LENGTH]{'\0'};
 
         size_t selectedRepo;
+        size_t selectedName;
 
         void fetchRepoData(std::atomic_bool* execDone_, std::atomic_int* success_);
         void writeRepoData(std::atomic_bool* execDone_, std::atomic_int* success_);

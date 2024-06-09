@@ -14,7 +14,8 @@ namespace bakermaker {
     }
 
     RepoManage::RepoManage() : BaseUIScreen(bakermaker::ProgramStage::REPO_MANAGE), exec(nullptr),
-        execDone(false), success(0), ugroups(), repos(), vectormutex(), selectedRepo(0), reponames() {}
+        execDone(false), success(0), ugroups(), repos(), vectormutex(), selectedRepo(0), reponames(),
+        selectedName(1) {}
 
     void RepoManage::render() {
         ImGui::PushFont(fontlist[1]);
@@ -119,7 +120,11 @@ namespace bakermaker {
             ImGui::SameLine();
             ImGui::SetNextItemWidth(600);
 
-            if(ImGui::BeginCombo("##add_user_combo", "e")) {
+            if(Json(config["keys"]).size() <= 1) {
+                ImGui::Text("Please add users above first");
+            }
+
+            else if(ImGui::BeginCombo("##add_user_combo",std::string(config["keys"][selectedName]).c_str())) {
                 ImGui::EndCombo();
             }
 

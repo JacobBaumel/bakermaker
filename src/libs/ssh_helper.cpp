@@ -46,7 +46,6 @@ namespace bakermaker {
                 std::cout << "Public key not accepted" << std::endl;
             else std::cout << "Could not connect to ssh server" << std::endl;
 
-            std::cout << "here1" << std::endl;
             return -3;
         }
 

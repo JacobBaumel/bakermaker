@@ -27,7 +27,7 @@ namespace bakermaker {
         bakermaker::documentation->render(instructions);
         ImGui::NewLine();
 
-        ImGui::Text("Name: ");
+        ImGui::Text("Create %s user: ", (Json(config["keys"]).size() == 0 ? "admin" : "regular"));
         if(exec && !execDone) ImGui::BeginDisabled();
         ImGui::SetNextItemWidth(600);
         ImGui::InputText("##newuserenter", newName, 64);
@@ -41,6 +41,7 @@ namespace bakermaker {
             else {
                 exec = new std::thread(&CreateSSHKeys::createUser, newName, &execDone, &success, &users);
             }
+            ImGui::BeginDisabled();
         }
 
         if(exec && !execDone) {
@@ -55,6 +56,10 @@ namespace bakermaker {
                 delete exec;
                 exec = nullptr;
 
+                if(success == 0) {
+                    Json(config["keys"][Json(config["keys"]).size()]) << newName;
+                }
+
                 switch(success) {
                     case 1:
                         bakermaker::startErrorModal("Error when adding user");
@@ -65,9 +70,11 @@ namespace bakermaker {
                 }
             }
 
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
-            ImGui::Text("Success!");
-            ImGui::PopStyleColor();
+            if(success == 0) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+                ImGui::Text("Success!");
+                ImGui::PopStyleColor();
+            }
         }
 
         ImGui::NewLine();
@@ -184,7 +191,6 @@ namespace bakermaker {
 
         size_t len = strlen(name);
         char* namec = new char[len];
-        namec[len] = '\0';
         memcpy(namec, name, len);
         users->push_back(namec);
 
