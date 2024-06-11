@@ -7,9 +7,9 @@
 [submodule "libs/libromfs"]
 	path = libs/libromfs
 	url = https://github.com/werwolv/libromfs
-[submodule "libs/json11"]
-	path = libs/json11
-	url = https://github.com/jacobbaumel/json11
 [submodule "libs/miniz"]
 	path = libs/miniz
 	url = https://github.com/richgel999/miniz
+[submodule "libs/json"]
+	path = libs/json
+	url = https://github.com/nlohmann/json

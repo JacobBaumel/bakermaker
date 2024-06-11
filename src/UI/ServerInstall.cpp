@@ -32,9 +32,9 @@ namespace bakermaker {
                 ssh_session ubuntu;
                 memset((void*) &ubuntu, 0, sizeof(ssh_session));
                 {
-                    int rc = bakermaker::createSession(ubuntu, std::string(config["server"]["ip"]).c_str(),
-                                                       std::string(config["server"]["user"]).c_str(),
-                                                       std::string(config["server"]["keyfile"]).c_str());
+                    int rc = bakermaker::createSession(ubuntu, config["server"]["ip"].get<std::string>().c_str(),
+                                                       config["server"]["user"].get<std::string>().c_str(),
+                                                       config["server"]["keyfile"].get<std::string>().c_str());
 
                     if(rc != SSH_OK) {
                         return;
@@ -45,13 +45,13 @@ namespace bakermaker {
                 sftp = sftp_new(ubuntu);
                 sftp_init(sftp);
 
-                uploadToRemote(sftp, (ST::string("keys/") + std::string(config["keys"][0])).c_str(),
+                uploadToRemote(sftp, (ST::string("keys/") + config["keys"][0].get<std::string>()).c_str(),
                                "gito");
 
                 uploadToRemote(sftp, (ST::string("keys/") +
-                                      std::string(config["keys"][0]) + ".pub").c_str(), "authorized_keys");
+                                      (config["keys"][0].get<std::string>() + ".pub")).c_str(), "authorized_keys");
 
-                uploadToRemote(sftp, (ST::string("keys/") + std::string(config["keys"][0])).c_str(), "gito");
+                uploadToRemote(sftp, (ST::string("keys/") + config["keys"][0].get<std::string>()).c_str(), "gito");
 
                 runSSHCommand(ubuntu, "sudo mkdir /home/git/.ssh; echo 'Created .ssh folder'");
                 runSSHCommand(ubuntu, "sudo cp /home/ubuntu/authorized_keys "
@@ -63,26 +63,25 @@ namespace bakermaker {
                 runSSHCommand(ubuntu, "sudo chmod 644 /home/git/.ssh/authorized_keys; echo 'Changed keys perms'");
                 runSSHCommand(ubuntu, "mkdir -p .ssh");
                 runSSHCommand(ubuntu, "mv ./authorized_keys .ssh/gito");
-                runSSHCommand(ubuntu, (ST::string("echo 'Host gito\n\tHostName ") +
-                                       std::string(config["server"]["ip"]) +
+                runSSHCommand(ubuntu, (ST::string("echo 'Host gito\n\tHostName 127.0.0.1") +
                                        "\n\tUser git\n\tIdentityFile ~/.ssh/gito' > .ssh/config").c_str());
 
                 ssh_session git;
                 {
-                    int rc = bakermaker::createSession(git, std::string(config["server"]["ip"]).c_str(),
+                    int rc = bakermaker::createSession(git, config["server"]["ip"].get<std::string>().c_str(),
                                                        "git", (ST::string("keys/") +
-                                                               std::string(config["keys"][0])).c_str());
+                                                               config["keys"][0].get<std::string>()).c_str());
 
                     if(rc != SSH_OK) return;
                 }
 
                 runSSHCommand(git, "mkdir /home/git/bin");
                 runSSHCommand(git, (ST::string("mv .ssh/authorized_keys ./") +
-                                    std::string(config["keys"][0]) + ".p").c_str());
+                                    config["keys"][0].get<std::string>() + ".p").c_str());
                 runSSHCommand(git, "git clone https://github.com/sitaramc/gitolite");
                 runSSHCommand(git, "git config --global --add safe.directory /home/git/gitolite");
                 runSSHCommand(git, "gitolite/install -ln /home/git/bin");
-                runSSHCommand(git, (ST::string("bin/gitolite setup -pk ") + std::string(config["keys"][0])).c_str());
+                runSSHCommand(git, (ST::string("bin/gitolite setup -pk ") + config["keys"][0].get<std::string>()).c_str());
 
                 runSSHCommand(ubuntu, "git clone gito:gitolite-admin");
 

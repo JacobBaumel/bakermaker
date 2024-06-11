@@ -6,8 +6,8 @@
 #include "imgui_impl_glfw.h"
 #include "string_theory/string"
 #include "romfs/romfs.hpp"
-#include "json11.h"
 #include <fstream>
+#include "nlohmann/json.hpp"
 
 #include "UI/BaseUIScreen.h"
 #include "UI/ServerSetup.h"
@@ -20,7 +20,7 @@ namespace bakermaker {
     bakermaker::ImguiMarkdownRender* documentation;
     bakermaker::ProgramStage stage = bakermaker::ProgramStage::SERVER_CONNECT;
     ST::string documarkdown;
-    Json config;
+    nlohmann::json config;
 
     void init(GLFWwindow* window) {
         glfwMakeContextCurrent(window);
@@ -59,15 +59,19 @@ namespace bakermaker {
 
         if(std::filesystem::exists("config.json")) {
             std::ifstream jsonFile("config.json");
-            jsonFile >> config;
+            config = nlohmann::json::parse(jsonFile);
         }
 
         else {
-            config["iscsi"] = {"", "", ""};
-            Json server;
-            server.set("ip", "").set("port", 22).set("user", "ubuntu").set("keyfile", "");
-            config["server"] = server;
-            config["keys"] = Json::array();
+            config = {
+                    {"iscsi", {"", "", ""}},
+                    {"server", {
+                            {"ip", ""},
+                            {"port", 22},
+                            {"user", "ubuntu"},
+                            {"keyfile", ""}}},
+                    {"keys", nlohmann::json::array()}
+            };
         }
 
         new bakermaker::ServerSetup();

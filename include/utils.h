@@ -7,14 +7,14 @@
 
 #include "ImguiMarkdownRender.h"
 #include "UI/BaseUIScreen.h"
-#include "json11.h"
+#include "nlohmann/json.hpp"
 #include "string_theory/string"
 
 namespace bakermaker {
     extern ImguiMarkdownRender* documentation;
     extern bakermaker::ProgramStage stage;
     extern ST::string documarkdown;
-    extern Json config;
+    extern nlohmann::json config;
 
 
     void startErrorModal(const char* error);

@@ -27,7 +27,7 @@ namespace bakermaker {
         bakermaker::documentation->render(instructions);
         ImGui::NewLine();
 
-        ImGui::Text("Create %s user: ", (Json(config["keys"]).size() == 0 ? "admin" : "regular"));
+        ImGui::Text("Create %s user: ", (config["keys"].empty() ? "admin" : "regular"));
         if(exec && !execDone) ImGui::BeginDisabled();
         ImGui::SetNextItemWidth(600);
         ImGui::InputText("##newuserenter", newName, 64);
@@ -57,7 +57,7 @@ namespace bakermaker {
                 exec = nullptr;
 
                 if(success == 0) {
-                    Json(config["keys"][Json(config["keys"]).size()]) << newName;
+                    config["keys"].push_back(newName);
                 }
 
                 switch(success) {

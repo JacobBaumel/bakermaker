@@ -9,13 +9,13 @@
 #include "string_theory/string"
 #include "ImguiMarkdownRender.h"
 #include "UI/BaseUIScreen.h"
-#include "json11.h"
+#include "nlohmann/json.hpp"
 
 namespace bakermaker {
     extern ImguiMarkdownRender* documentation;
     extern bakermaker::ProgramStage stage;
     extern ST::string documarkdown;
-    extern Json config;
+    extern nlohmann::json config;
 
     void init(GLFWwindow* window);
     void prerender();

@@ -14,11 +14,11 @@ namespace bakermaker {
         browser->SetTitle("Choose SSH Private Key");
         browser->ClearSelected();
 
-        strcpy_s(ip, std::string(config["server"]["ip"]).c_str());
-        strcpy_s(user, std::string(config["server"]["user"]).c_str());
-        port = int(config["server"]["port"]);
+        strcpy_s(ip, config["server"]["ip"].get<std::string>().c_str());
+        strcpy_s(user, config["server"]["user"].get<std::string>().c_str());
+        port = config["server"]["port"];
 
-        ST::string path = std::string(config["server"]["user"]);
+        ST::string path = config["server"]["user"];
         browser->SetPwd(path.empty() ? std::filesystem::current_path() : path.c_str());
     }
 

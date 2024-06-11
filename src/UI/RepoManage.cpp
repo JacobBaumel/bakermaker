@@ -120,11 +120,11 @@ namespace bakermaker {
             ImGui::SameLine();
             ImGui::SetNextItemWidth(600);
 
-            if(Json(config["keys"]).size() <= 1) {
+            if(config["keys"].size() <= 1) {
                 ImGui::Text("Please add users above first");
             }
 
-            else if(ImGui::BeginCombo("##add_user_combo",std::string(config["keys"][selectedName]).c_str())) {
+            else if(ImGui::BeginCombo("##add_user_combo", config["keys"][selectedName].get<std::string>().c_str())) {
                 ImGui::EndCombo();
             }
 
