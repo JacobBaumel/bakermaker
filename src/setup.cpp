@@ -13,7 +13,7 @@
 #include "UI/ServerSetup.h"
 #include "UI/ServerConnect.h"
 #include "UI/ServerInstall.h"
-#include "UI/CreateSSHKeys.h"
+#include "UI/CreateAdminKey.h"
 #include "UI/RepoManage.h"
 
 namespace bakermaker {
@@ -77,7 +77,7 @@ namespace bakermaker {
         new bakermaker::ServerSetup();
         new bakermaker::ServerConnect();
         new bakermaker::ServerInstall();
-        new bakermaker::CreateSSHKeys();
+        new bakermaker::CreateAdminKey();
         new bakermaker::RepoManage();
     }
 
@@ -106,7 +106,7 @@ namespace bakermaker {
 
         {
             std::ofstream jsonFile("config.json");
-            jsonFile << config;
+            jsonFile << config.dump(4);
         }
 
         ImGui_ImplOpenGL3_Shutdown();

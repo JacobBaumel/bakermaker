@@ -2,8 +2,8 @@
 // Created by skipp on 5/1/2024.
 //
 
-#ifndef BAKERMAKER_CREATESSHKEYS_H
-#define BAKERMAKER_CREATESSHKEYS_H
+#ifndef BAKERMAKER_CREATEADMINKEY_H
+#define BAKERMAKER_CREATEADMINKEY_H
 
 #include "UI/BaseUIScreen.h"
 #include "string_theory/string"
@@ -12,16 +12,15 @@
 #include <atomic>
 
 namespace bakermaker {
-    class CreateSSHKeys : public BaseUIScreen {
+    class CreateAdminKey : public BaseUIScreen {
     private:
         static constexpr int USERLENGTH = 65;
         static void createUser(const char* name, std::atomic_bool* execDone,
-                               std::atomic_int* success, std::vector<char*>* users);
+                               std::atomic_int* success);
         static void deleteUser(const char* name, std::atomic_bool* execDone,
-                               std::atomic_int* success, std::vector<char*>* users);
+                               std::atomic_int* success);
 
         ST::string instructions;
-        std::vector<char*> users;
 
         char* newName;
 
@@ -31,10 +30,10 @@ namespace bakermaker {
 
 
     public:
-        CreateSSHKeys();
+        CreateAdminKey();
         void render() override;
         
     };
 }
 
-#endif //BAKERMAKER_CREATESSHKEYS_H
+#endif //BAKERMAKER_CREATEADMINKEY_H

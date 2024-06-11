@@ -27,7 +27,7 @@ add_executable(bakermaker src/main.cpp libs/imgui/imgui.cpp libs/imgui/imgui_dra
         src/UI/ServerConnect.cpp
         src/libs/ssh_helper.cpp
         src/UI/ServerInstall.cpp
-        src/UI/CreateSSHKeys.cpp
+        src/UI/CreateAdminKey.cpp
         src/UI/LibsNotFound.cpp
         src/libs/unzip_utils.cpp
         src/utils.cpp

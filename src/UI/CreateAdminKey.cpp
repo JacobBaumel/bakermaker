@@ -1,4 +1,4 @@
-#include "UI/CreateSSHKeys.h"
+#include "UI/CreateAdminKey.h"
 #include "UI/BaseUIScreen.h"
 #include "romfs/romfs.hpp"
 #include "utils.h"
@@ -7,18 +7,19 @@
 #include <iostream>
 #include "improgress.h"
 #include <chrono>
+#include <set>
 
 namespace bakermaker {
-    CreateSSHKeys::CreateSSHKeys() : BaseUIScreen(bakermaker::ProgramStage::SSH_KEYGEN),
-        exec(nullptr), success(0), newName(new char[64]{'\0'}), execDone(false) {
-        romfs::Resource text = romfs::get("SSHKeyGen.md");
+    CreateAdminKey::CreateAdminKey() : BaseUIScreen(bakermaker::ProgramStage::SSH_KEYGEN_ADMIN),
+                                       exec(nullptr), success(0), newName(new char[64]{'\0'}), execDone(false) {
+        romfs::Resource text = romfs::get("SSHAdminKeyGen.md");
         instructions = ST::string((char*) text.data(), text.size());
 
         if(!std::filesystem::exists("keys") && !std::filesystem::is_directory("keys"))
             std::filesystem::create_directories("keys");
     }
 
-    void CreateSSHKeys::render() {
+    void CreateAdminKey::render() {
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Create SSH Keys");
         ImGui::PopFont();
@@ -27,27 +28,30 @@ namespace bakermaker {
         bakermaker::documentation->render(instructions);
         ImGui::NewLine();
 
-        ImGui::Text("Create %s user: ", (config["keys"].empty() ? "admin" : "regular"));
-        if(exec && !execDone) ImGui::BeginDisabled();
+        ImGui::Text("Create admin user: ");
+        if((exec && !execDone) || execDone) ImGui::BeginDisabled();
         ImGui::SetNextItemWidth(600);
         ImGui::InputText("##newuserenter", newName, 64);
         ImGui::SameLine();
 
         if(ImGui::Button("Add User")) {
             execDone = false;
-            if(std::find(users.begin(), users.end(), std::string(newName)) != users.end()) {
-                bakermaker::startErrorModal((ST::string("User ") + newName + " has already been added.").c_str());
+
+            std::set<std::string> users = config["keys"].get<std::set<std::string>>();
+
+            if(users.contains(std::string(newName))) {
+                bakermaker::startErrorModal((ST::string("User \"") + newName + "\" has already been added.").c_str());
             }
             else {
-                exec = new std::thread(&CreateSSHKeys::createUser, newName, &execDone, &success, &users);
+                exec = new std::thread(&CreateAdminKey::createUser, newName, &execDone, &success);
+                ImGui::BeginDisabled();
             }
-            ImGui::BeginDisabled();
         }
 
-        if(exec && !execDone) {
+        if((exec && !execDone) || execDone) {
             ImGui::EndDisabled();
             ImGui::SameLine();
-            bakermaker::spinner();
+            if(!execDone) bakermaker::spinner();
         }
 
         if(execDone) {
@@ -56,17 +60,27 @@ namespace bakermaker {
                 delete exec;
                 exec = nullptr;
 
-                if(success == 0) {
-                    config["keys"].push_back(newName);
-                }
-
                 switch(success) {
-                    case 1:
-                        bakermaker::startErrorModal("Error when adding user");
+                    case 0:
+                        config["keys"].push_back(newName);
                         break;
 
-                    case -1:
-                        bakermaker::startErrorModal("Error when deleting user");
+                    case 1:
+                        bakermaker::startErrorModal("Failed to generate SSH key!");
+                        break;
+
+                    case 2:
+                        bakermaker::startErrorModal("Failed to export key to file!");
+                        break;
+
+                    case 3:
+                        bakermaker::startErrorModal("Failed to generate public key!");
+                        break;
+
+                    case 4:
+                        bakermaker::startErrorModal("Failed to export public key to file!");
+                        break;
+
                 }
             }
 
@@ -77,28 +91,28 @@ namespace bakermaker {
             }
         }
 
-        ImGui::NewLine();
-
-        ImGui::PushFont(fontlist[2]);
-        ImGui::Text("Added Users:");
-        ImGui::PopFont();
-
-        if(ImGui::BeginTable("table", 2,
-                             ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(600, 0))) {
-            for(const auto& name : users) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("%s", name);
-                ImGui::TableNextColumn();
-                if(ImGui::Button((ST::string("Delete##") + name).c_str())) {
-                    execDone = false;
-                    exec = new std::thread(&CreateSSHKeys::deleteUser, name, &execDone, &success, &users);
-                }
-            }
-            ImGui::EndTable();
-        }
-
-
+//        ImGui::NewLine();
+//
+//        ImGui::PushFont(fontlist[2]);
+//        ImGui::Text("Added Users:");
+//        ImGui::PopFont();
+//
+//        if(ImGui::BeginTable("table", 2,
+//                             ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(600, 0))) {
+//            for(const auto& name : users) {
+//                ImGui::TableNextRow();
+//                ImGui::TableNextColumn();
+//                ImGui::Text("%s", name);
+//                ImGui::TableNextColumn();
+//                if(ImGui::Button((ST::string("Delete##") + name).c_str())) {
+//                    execDone = false;
+//                    exec = new std::thread(&CreateAdminKey::deleteUser, name, &execDone, &success, &users);
+//                }
+//            }
+//            ImGui::EndTable();
+//        }
+//
+//
 //
 //        if(hasConfirmed) ImGui::BeginDisabled();
 //        ImGui::Text("Admin User: ");
@@ -184,28 +198,9 @@ namespace bakermaker {
 //        }
     }
 
-    void CreateSSHKeys::createUser(const char* name, std::atomic_bool* execDone,
-                                   std::atomic_int* success, std::vector<char*>* users) {
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(2000ms);
-
-        size_t len = strlen(name);
-        char* namec = new char[len];
-        memcpy(namec, name, len);
-        users->push_back(namec);
-
-        *success = 0;
-        *execDone = true;
-    }
-
-    void CreateSSHKeys::deleteUser(const char* name, std::atomic_bool* execDone,
-                                   std::atomic_int* success, std::vector<char*>* users) {
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(2000ms);
-
-        users->erase(std::find(users->begin(), users->end(), std::string(name)));
-
-        *success = 0;
+    void CreateAdminKey::createUser(const char* name, std::atomic_bool* execDone,
+                                    std::atomic_int* success) {
+        *success = -genSSHKeyToFile((ST::string("keys/") + name).c_str());
         *execDone = true;
     }
 }
