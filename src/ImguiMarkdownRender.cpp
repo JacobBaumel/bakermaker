@@ -32,7 +32,7 @@ namespace bakermaker {
                 ((ImguiMarkdownRender*) data.userData)->imageNames.push_back(texture);
                 ((ImguiMarkdownRender*) data.userData)->imageNamesLength++;
                 idata.isValid = true;
-                idata.user_texture_id = reinterpret_cast<ImTextureID>(texture);
+                idata.user_texture_id = (void*) ((long long) texture);
                 idata.size = ImVec2((float) width / 2, (float) height / 2);
             }
 
