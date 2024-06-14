@@ -61,9 +61,10 @@ int main() {
 
             else {
                 if(ImGui::BeginTabBar("##tabbar", tabflags)) {
-                    if(ImGui::BeginTabItem("Server Management", &open1, tabitemflags)) {
-                        if(ImGui::Button("error")) bakermaker::startErrorModal("this is a test error");
-                        for(auto& screen : bakermaker::screens) {
+                    bool setup = bakermaker::config["setup"].get<bool>();
+                    if(ImGui::BeginTabItem((setup ? "Server Config" :
+                            "Server Management"), &open1, tabitemflags)) {
+                        for(auto& screen : (setup ? bakermaker::configScreens : bakermaker::setupScreens)) {
                             screen.second->render();
                             ImGui::NewLine();
                         }

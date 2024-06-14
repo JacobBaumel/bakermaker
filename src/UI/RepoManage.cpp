@@ -13,9 +13,9 @@ namespace bakermaker {
         return ST::string(line);
     }
 
-    RepoManage::RepoManage() : BaseUIScreen(bakermaker::ProgramStage::REPO_MANAGE), exec(nullptr),
-        execDone(false), success(0), ugroups(), repos(), vectormutex(), selectedRepo(0), reponames(),
-        selectedName(1) {}
+    RepoManage::RepoManage() : BaseUIScreen(bakermaker::ProgramStage::REPO_MANAGE, &bakermaker::configScreens),
+        exec(nullptr), execDone(false), success(0), ugroups(), repos(), vectormutex(), selectedRepo(0),
+        reponames(), selectedName(1) {}
 
     void RepoManage::render() {
         ImGui::PushFont(fontlist[1]);

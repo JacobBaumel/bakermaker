@@ -10,7 +10,7 @@
 #include <set>
 
 namespace bakermaker {
-    CreateAdminKey::CreateAdminKey() : BaseUIScreen(bakermaker::ProgramStage::SSH_KEYGEN_ADMIN),
+    CreateAdminKey::CreateAdminKey() : BaseUIScreen(bakermaker::ProgramStage::SSH_KEYGEN_ADMIN, &bakermaker::setupScreens),
                                        exec(nullptr), success(0), newName(new char[64]{'\0'}), execDone(false) {
         romfs::Resource text = romfs::get("SSHAdminKeyGen.md");
         instructions = ST::string((char*) text.data(), text.size());

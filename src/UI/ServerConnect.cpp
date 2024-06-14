@@ -8,7 +8,7 @@
 namespace bakermaker {
     using namespace ST::literals;
 
-    ServerConnect::ServerConnect() : BaseUIScreen(bakermaker::ProgramStage::SERVER_CONNECT),
+    ServerConnect::ServerConnect() : BaseUIScreen(bakermaker::ProgramStage::SERVER_CONNECT, &bakermaker::setupScreens),
                                      execDone(false) {
         browser = new ImGui::FileBrowser(FILE_PICKER_FLAGS);
         browser->SetTitle("Choose SSH Private Key");

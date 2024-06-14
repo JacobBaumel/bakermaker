@@ -2,7 +2,7 @@
 #include "utils.h"
 
 namespace bakermaker {
-    ServerSetup::ServerSetup() : BaseUIScreen(bakermaker::ProgramStage::SERVER_SETUP) {
+    ServerSetup::ServerSetup() : BaseUIScreen(bakermaker::ProgramStage::SERVER_SETUP, &bakermaker::setupScreens) {
         strcpy_s(c1, config["iscsi"][0].get<std::string>().c_str());
         strcpy_s(c2, config["iscsi"][1].get<std::string>().c_str());
         strcpy_s(c3, config["iscsi"][2].get<std::string>().c_str());

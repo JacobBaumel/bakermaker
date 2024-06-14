@@ -26,11 +26,12 @@ namespace bakermaker {
 
     class BaseUIScreen {
     public:
-        explicit BaseUIScreen(ProgramStage programStage);
+        explicit BaseUIScreen(ProgramStage programStage, std::map<ProgramStage, BaseUIScreen*>* map);
         virtual void render() = 0;
     };
 
-    extern std::map<ProgramStage, BaseUIScreen*> screens;
+    extern std::map<ProgramStage, BaseUIScreen*> setupScreens;
+    extern std::map<ProgramStage, BaseUIScreen*> configScreens;
 }
 
 #endif //BAKERMAKER_BASEUISCREEN_H

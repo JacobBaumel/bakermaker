@@ -9,7 +9,7 @@
 #include "utils.h"
 
 namespace bakermaker {
-    LibsNotFound::LibsNotFound() : BaseUIScreen(bakermaker::ProgramStage::LIBS_NOT_FOUND),
+    LibsNotFound::LibsNotFound() : BaseUIScreen(bakermaker::ProgramStage::LIBS_NOT_FOUND, nullptr),
         extrDone(false) {
         extrThread = new std::thread([this](){
             romfs::Resource libs = romfs::get("libs.zip");

@@ -8,7 +8,7 @@
 #include <iostream>
 
 namespace bakermaker {
-    ServerInstall::ServerInstall() : BaseUIScreen(bakermaker::ProgramStage::SERVER_INSTALL),
+    ServerInstall::ServerInstall() : BaseUIScreen(bakermaker::ProgramStage::SERVER_INSTALL, &bakermaker::setupScreens),
                                      execDone(false), execProgress(0), bufferMutex(), hasStartedExec(false),
                                      showCommandOutputs(false),
                                      exec(nullptr) {
