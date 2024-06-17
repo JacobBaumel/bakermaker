@@ -25,6 +25,9 @@ namespace bakermaker {
         bakermaker::documentation->render(instructions);
 
         ImGui::NewLine();
+
+        if(config["keys"].empty()) ImGui::BeginDisabled();
+
         if(ImGui::Button("Begin##server_install_begin")) {
             hasStartedExec = true;
 
@@ -48,54 +51,32 @@ namespace bakermaker {
                 uploadToRemote(sftp, (ST::string("keys/") + config["keys"][0].get<std::string>()).c_str(),
                                "gito");
 
-                uploadToRemote(sftp, (ST::string("keys/") +
-                                      (config["keys"][0].get<std::string>() + ".pub")).c_str(), "authorized_keys");
+                uploadToRemote(sftp, (ST::string("keys/") + config["keys"][0].get<std::string>() + ".pub")
+                        .c_str(), "authorized_keys");
 
-                uploadToRemote(sftp, (ST::string("keys/") + config["keys"][0].get<std::string>()).c_str(), "gito");
-
-                runSSHCommand(ubuntu, "sudo mkdir /home/git/.ssh; echo 'Created .ssh folder'");
-                runSSHCommand(ubuntu, "sudo cp /home/ubuntu/authorized_keys "
-                                      "/home/git/.ssh/authorized_keys; echo 'Moved authorized_keys file'");
-                runSSHCommand(ubuntu, "sudo chown -R git:git /home/git/.ssh; echo 'Changed .ssh ownership'");
-                runSSHCommand(ubuntu, "sudo chown -R git:git /home/git/.ssh/authorized_keys;"
-                                      " echo 'Changed authorized_keys ownership'");
-                runSSHCommand(ubuntu, "sudo chmod 700 /home/git/.ssh; echo 'Changed .ssh folder perms'");
-                runSSHCommand(ubuntu, "sudo chmod 644 /home/git/.ssh/authorized_keys; echo 'Changed keys perms'");
-                runSSHCommand(ubuntu, "mkdir -p .ssh");
-                runSSHCommand(ubuntu, "mv ./authorized_keys .ssh/gito");
-                runSSHCommand(ubuntu, (ST::string("echo 'Host gito\n\tHostName 127.0.0.1") +
-                                       "\n\tUser git\n\tIdentityFile ~/.ssh/gito' > .ssh/config").c_str());
-
-                ssh_session git;
                 {
-                    int rc = bakermaker::createSession(git, config["server"]["ip"].get<std::string>().c_str(),
-                                                       "git", (ST::string("keys/") +
-                                                               config["keys"][0].get<std::string>()).c_str());
-
-                    if(rc != SSH_OK) return;
+                    romfs::Resource script = romfs::get("install.sh");
+                    uploadToRemote(sftp, (void*) script.data(), script.size(), "install.sh");
+                    script = romfs::get("commitall.sh");
+                    uploadToRemote(sftp, (void*) script.data(), script.size(), "commitall.sh");
                 }
 
-                runSSHCommand(git, "mkdir /home/git/bin");
-                runSSHCommand(git, (ST::string("mv .ssh/authorized_keys ./") +
-                                    config["keys"][0].get<std::string>() + ".p").c_str());
-                runSSHCommand(git, "git clone https://github.com/sitaramc/gitolite");
-                runSSHCommand(git, "git config --global --add safe.directory /home/git/gitolite");
-                runSSHCommand(git, "gitolite/install -ln /home/git/bin");
-                runSSHCommand(git, (ST::string("bin/gitolite setup -pk ") + config["keys"][0].get<std::string>()).c_str());
+                sftp_free(sftp);
 
-                runSSHCommand(ubuntu, "git clone gito:gitolite-admin");
-
-                curcmd.lock();
-                curcmdstr = "Finished";
-                curcmd.unlock();
-
-                bufferMutex.lock();
-                commandProgress.append(SEPARATOR_STR);
-                bufferMutex.unlock();
+                runSSHCommand(ubuntu, "chmod +x ~/install.sh");
+                runSSHCommand(ubuntu, "chmod +x ~/commitall.sh");
+                runSSHCommand(ubuntu, "~/install.sh");
 
                 ssh_disconnect(ubuntu);
                 ssh_free(ubuntu);
             });
+        }
+
+        if(config["keys"].empty()) {
+            ImGui::EndDisabled();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
+            ImGui::Text("Create admin key first!");
+            ImGui::PopStyleColor();
         }
 
         if(hasStartedExec) {

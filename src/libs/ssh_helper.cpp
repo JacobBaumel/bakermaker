@@ -87,8 +87,10 @@ namespace bakermaker {
         return 0;
     }
 
+#define FILE_FLAGS O_WRONLY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE | S_IEXEC
+
     int uploadToRemote(sftp_session s, const char* filepath, const char* remotepath) {
-        sftp_file file = sftp_open(s, remotepath, O_WRONLY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE | S_IEXEC);
+        sftp_file file = sftp_open(s, remotepath, FILE_FLAGS);
 
         if(file == nullptr) return -1;
 
@@ -100,7 +102,11 @@ namespace bakermaker {
         char buffer[256];
         size_t nbytes = fread_s(buffer, 256, 1, 256, localfile);
         while(nbytes > 0) {
-            sftp_write(file, buffer, nbytes);
+            if(sftp_write(file, buffer, nbytes) == 0) {
+                sftp_close(file);
+                return -4;
+            }
+
             nbytes = fread_s(buffer, 256, 1, 256, localfile);
         }
 
@@ -110,5 +116,14 @@ namespace bakermaker {
         }
 
         return 0;
+    }
+
+    int uploadToRemote(sftp_session s, void* data, size_t size, const char* remotepath) {
+        sftp_file file = sftp_open(s, remotepath, FILE_FLAGS);
+
+        if(file == nullptr) return -1;
+        size_t rc = sftp_write(file, data, size);
+
+        return rc == 0 ? -2 : 0;
     }
 }

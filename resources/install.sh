@@ -112,7 +112,7 @@ else
 	exit 1
 fi
 
-echo -e 'Host gito\n\tHostName 127.0.0.1\n\tUser git\n\tIdentityFile ~/.ssh/gito' > .ssh/config
+echo -e 'Host gito\n\tStrictHostKeyChecking=no\n\tHostName 127.0.0.1\n\tUser git\n\tIdentityFile ~/.ssh/gito' > .ssh/config
 
 if [ $? -eq 0 ]; then
 	echo "Wrote ssh config file"
