@@ -10,12 +10,16 @@
 #include "nlohmann/json.hpp"
 #include "string_theory/string"
 
+#define USERLENGTH 64
+
 namespace bakermaker {
+
     extern ImguiMarkdownRender* documentation;
     extern bakermaker::ProgramStage stage;
     extern ST::string documarkdown;
     extern nlohmann::json config;
 
+    void createUser(const char* name, std::atomic_bool* execDone, std::atomic_int* success);
 
     void startErrorModal(const char* error);
     void displayErrorModal();

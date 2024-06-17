@@ -14,12 +14,6 @@
 namespace bakermaker {
     class CreateAdminKey : public BaseUIScreen {
     private:
-        static constexpr int USERLENGTH = 65;
-        static void createUser(const char* name, std::atomic_bool* execDone,
-                               std::atomic_int* success);
-        static void deleteUser(const char* name, std::atomic_bool* execDone,
-                               std::atomic_int* success);
-
         ST::string instructions;
 
         char* newName;

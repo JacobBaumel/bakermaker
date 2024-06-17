@@ -1,3 +1,11 @@
+#include <set>
+#include <chrono>
+#include <iostream>
+#include "ssh_helper.h"
+#include <filesystem>
+#include "romfs/romfs.hpp"
+#include "UI/BaseUIScreen.h"
+#include "UI/CreateAdminKey.h"
 #include "utils.h"
 #include "improgress.h"
 
@@ -62,4 +70,8 @@ namespace bakermaker {
                        ImGui::GetColorU32(ImVec4(0.1, 0.1, 0.75, 1)));
     }
 
+    void createUser(const char* name, std::atomic_bool* execDone, std::atomic_int* success) {
+        *success = -genSSHKeyToFile((ST::string("keys/") + name).c_str());
+        *execDone = true;
+    }
 }

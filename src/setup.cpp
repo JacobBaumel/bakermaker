@@ -14,6 +14,7 @@
 #include "UI/ServerConnect.h"
 #include "UI/ServerInstall.h"
 #include "UI/CreateAdminKey.h"
+#include "UI/UserManage.h"
 #include "UI/RepoManage.h"
 
 namespace bakermaker {
@@ -79,6 +80,7 @@ namespace bakermaker {
         new bakermaker::ServerConnect();
         new bakermaker::ServerInstall();
         new bakermaker::CreateAdminKey();
+        new bakermaker::UserManage();
         new bakermaker::RepoManage();
     }
 
@@ -88,6 +90,7 @@ namespace bakermaker {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
     }
 
     void postrender(GLFWwindow* window) {

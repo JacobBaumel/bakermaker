@@ -31,7 +31,7 @@ namespace bakermaker {
         ImGui::Text("Create admin user: ");
         if((exec && !execDone) || execDone) ImGui::BeginDisabled();
         ImGui::SetNextItemWidth(600);
-        ImGui::InputText("##newuserenter", newName, 64);
+        ImGui::InputText("##newuserenter", newName, USERLENGTH);
         ImGui::SameLine();
 
         if(ImGui::Button("Add User")) {
@@ -43,7 +43,7 @@ namespace bakermaker {
                 bakermaker::startErrorModal((ST::string("User \"") + newName + "\" has already been added.").c_str());
             }
             else {
-                exec = new std::thread(&CreateAdminKey::createUser, newName, &execDone, &success);
+                exec = new std::thread(&bakermaker::createUser, newName, &execDone, &success);
                 ImGui::BeginDisabled();
             }
         }
@@ -198,9 +198,4 @@ namespace bakermaker {
 //        }
     }
 
-    void CreateAdminKey::createUser(const char* name, std::atomic_bool* execDone,
-                                    std::atomic_int* success) {
-        *success = -genSSHKeyToFile((ST::string("keys/") + name).c_str());
-        *execDone = true;
-    }
 }
