@@ -1,131 +1,316 @@
 #!/bin/bash
 
-sudo DEBIAN_FRONTEND=noninteractive apt-get update
+err () {
+  if [ $1 -eq 0 ]; then
+    echo $2
+  else
+    echo $3
+    exit 1
+  fi
+}
 
-if [ $? -eq 0 ];  then
-	echo "Successfully updated package lists."
-else
-	echo "Error updating package lists! Stopping install."
-	exit 1
+prog () {
+  echo $1 > progress
+}
+
+if [ ! -f progress ]; then
+  echo 0 > progress
 fi
 
-sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --allow-downgrades --allow-remove-essential --allow-change-held-packages
+case $(cat progress) in
+  0)
+    if [ $1 -eq 1 ]; then
+      $2
+      err $? "Connecting ISCSI drive (1/3)" "Failed to connect to ISCSI drive"
+    fi
 
-if [ $? -eq 0 ]; then
-	echo "Successfully updated system."
-else
-	echo "Error updating system! Stopping install."
-	exit 1
-fi
+    prog 1
+    ;&
 
-sudo DEBIAN_FRONTEND=noninteractive apt-get install git -y
+  1)
+    if [ $1 -eq 1 ]; then
+      $3
+      err $? "Connecting ISCSI drive (2/3)" "Failed to connect to ISCSI drive"
+    fi
 
-if [ $? -eq 0 ]; then
-	echo "Successfully installed Git."
-else
-	echo "Error installig Git! Stopping setup."
-	exit 1
-fi
+    prog 2
+    ;&
 
+  2)
+    if [ $1 -eq 1 ]; then
+      $4
+      err $? "Connecting ISCSI drive (3/3)" "Failed to connect to ISCSI drive"
+    fi
 
-if id -u git > /dev/null 2>&1; then
-	echo "Git user already exists, deleting user."
-	sudo deluser --remove-home git > /dev/null
+    prog 3
+    ;&
 
-	if [ $? -ne 0 ]; then
-		echo "Error deleting preexisting git user. Stopping setup."
-		exit 1
+  3)
+    if [ $1 -eq 1 ]; then
+      sudo mkfs -t ext4 /dev/sdb
+      err $? "Formatting ISCSI drive" "Failed to format ISCSI drive"
+    fi
 
-	fi
-fi
+    prog 4
+    ;&
 
-sudo adduser --gecos "" --disabled-password git > /dev/null
+  4)
+    if [ $1 -eq 1 ]; then
+      uuid=$(sudo blkid /dev/sdb -o value | head -n 1)
+      echo -e '\n\nUUID="$(uuid)"\t/mnt\text4\tdefaults,noatime,_netdev\t0 2' | sudo tee -a /etc/fstab
+      err $? "Adding ISCSI drive to /etc/fstab" "Failed to write to /etc/fstab"
+    fi
 
-if [ $? -eq 0 ]; then
-	echo "Successfully created new git user"
-else
-	echo "Error creating git user. Stopping setup."
-	exit 1
-fi
+    prog 5
+    ;&
 
-sudo mkdir -p /home/git/.ssh
+  5)
+    if [ $1 -eq 1 ]; then
+      sudo mount -a
+      err $? "Mounting ISCSI drive" "Failed to mount ISCSI drive"
+    fi
 
-if [ $? -eq 0 ]; then
-	echo "Created /home/git/.ssh"
-else
-	echo "Error creating .ssh folder. Stopping install."
-	exit 1
-fi
+    prog 6
+    ;&
 
-sudo cp /home/ubuntu/authorized_keys /home/git/.ssh/authorized_keys
+  6)
+    if [ $1 -eq 1 ]; then
+      sudo chmod a+rwx /mnt -R
+      err $? "Writing permissions for ISCSI drive" "Failed to write ISCSI permissions"
+    else
+      echo "Skipping ISCSI setup"
+    fi
 
-if [ $? -eq 0 ]; then
-	echo "Copied authorized_keys to git user"
-else
-	echo "Failed to copy authorized keys!"
-	exit 1
-fi
+    prog 7
+    ;&
 
-sudo chown -R git:git /home/git/.ssh
+  7)
+    sudo DEBIAN_FRONTEND=noninteractive apt-get update
+    err $? "Successfully updated package lists" "Error updating package lists! Stopping install"
 
-if [ $? -eq 0 ]; then
-	echo "Changed owner of ssh directory"
-else
-	echo "Failed to change ssh directory ownership"
-	exit 1
-fi
+    prog 8
+    ;&
 
-sudo chown -R git:git /home/git/.ssh/authorized_keys
+  8)
+    sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --allow-downgrades --allow-remove-essential --allow-change-held-packages
+    err $? "Successfully updated system" "Error updating system"
 
-if [ $? -eq 0 ]; then
-	echo "Changed owner of authorized keys"
-else
-	echo "Failed to change authorized keys ownership"
-	exit 1
-fi
+    prog 9;
+    ;&
 
+  9)
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install git -y
+    err $? "Successfully installed git" "Error installig Git! Stopping setup"
 
-sudo chmod 700 /home/git/.ssh
+    prog 10
+    ;&
 
-if [ $? -eq 0 ]; then
-	echo "Changed permissions of ssh directory"
-else
-	echo "Failed to change ssh directory permissions"
-	exit 1
-fi
+  10)
+    if id -u git > /dev/null 2>&1; then
+    	echo "Git user already exists, deleting user."
+    	sudo deluser --remove-home git > /dev/null
 
-sudo chmod 644 /home/git/.ssh/authorized_keys
+    	if [ $? -ne 0 ]; then
+    		echo "Error deleting preexisting git user"
+    		exit 1
+    	fi
+    fi
 
-if [ $? -eq 0 ]; then
-	echo "Changed permission of authorized keys"
-else
-	echo "Failed to change permission of authorized keys"
-	exit 1
-fi
+    sudo adduser --gecos "" --disabled-password git > /dev/null
+    err $? "Successfully created new git user" "Error creating git user"
 
-mkdir -p .ssh
+    prog 11
+    ;&
 
-if [ $? -eq 0 ]; then
-	echo "Creted ubuntu ssh directory"
-else
-	echo "Could not create ubuntu ssh directory"
-	exit 1
-fi
+  11)
+    sudo mkdir -p /home/git/.ssh
+    err $? "Created /home/git/.ssh" "Error creating .ssh folder"
 
-echo -e 'Host gito\n\tStrictHostKeyChecking=no\n\tHostName 127.0.0.1\n\tUser git\n\tIdentityFile ~/.ssh/gito' > .ssh/config
+    prog 12
+    ;&
 
-if [ $? -eq 0 ]; then
-	echo "Wrote ssh config file"
-else
-	echo "Failed to write config file"
-	exit 1
-fi
+  12)
+    sudo cp /home/ubuntu/authorized_keys /home/git/.ssh/authorized_keys
+    err $? "Copied authorized_keys to git user" "Failed to copy authorized keys"
 
-mv ./gito ./.ssh/gito
+    prog 13
 
-if [ $? -eq 0 ]; then
-	echo "Moved private ssh key to location"
-else
-	echo "Failed to move private ssh key"
-	exit 1
-fi
+    ;&
+
+  13)
+    sudo chown -R git:git /home/git/.ssh
+    err $? "Changed owner of ssh directory" "Failed to change ssh directory ownership"
+
+    prog 14
+    ;&
+
+  14)
+    sudo chown -R git:git /home/git/.ssh/authorized_keys
+    err $? "Changed owner of authorized keys" "Failed to change authorized keys ownership"
+
+    prog 15
+    ;&
+
+  15)
+    sudo chmod 700 /home/git/.ssh
+    err $? "Changed permissions of ssh directory" "Failed to change ssh directory permissions"
+
+    prog 16
+    ;&
+
+  16)
+    sudo chmod 644 /home/git/.ssh/authorized_keys
+    err $? "Changed permission of authorized keys" "Failed to change permission of authorized keys"
+
+    prog 17
+    ;&
+
+  17)
+    sudo chmod 644 /home/git/.ssh/authorized_keys
+    err $? "Changed permission of authorized keys" "Failed to change permission of authorized keys"
+
+    prog 18
+    ;&
+
+  18)
+    sudo chmod 644 /home/git/.ssh/authorized_keys
+    err $? "Changed permission of authorized keys" "Failed to change permission of authorized keys"
+
+    prog 19
+    ;&
+
+  19)
+    mkdir -p .ssh
+    err $? "Creted ubuntu ssh directory" "Could not create ubuntu ssh directory"
+
+    prog 20
+    ;&
+
+  20)
+    mkdir -p .ssh
+    err $? "Creted ubuntu ssh directory" "Could not create ubuntu ssh directory"
+
+    prog 21
+    ;&
+
+  21)
+    echo -e 'Host gito\n\tStrictHostKeyChecking=no\n\tHostName 127.0.0.1\n\tUser git\n\tIdentityFile ~/.ssh/gito' > .ssh/config
+    err $? "Wrote ssh config file" "Failed to write config file"
+
+    prog 22
+    ;&
+
+  22)
+    mv ./gito ./.ssh/gito
+    err $? "Moved private ssh key to location" "Failed to move private ssh key"
+
+    prog 23
+    ;&
+
+  23)
+    scp ./gituserinstall.sh gito:~/gituserinstall.sh
+    ssh gito "chmod +x ~/gituserinstall.sh"
+    err $? "Uploaded second setup script" "Failed to upload second setup script"
+
+    prog 24
+    ;&
+
+  24)
+    ssh gito "~/gituserinstall.sh $1"
+    err $? "Completed git user setup" "Failed to set up git user"
+
+    prog 25
+    ;&
+
+  25)
+    git clone gito:gitolite-admin
+    err $? "Cloned administrative repository" "Failed to clone administrative repository"
+
+    ;;
+esac
+
+echo "Finished installing git server"
+
+#
+#if [ $1 -eq 1 ]; then
+#  echo "Setting up ISCSI drive"
+#  $2
+#  err $? "Connecting ISCSI drive (1/3)" "Failed to connect to ISCSI drive"
+#
+#  $3
+#  err $? "Connecting ISCSI drive (2/3)" "Failed to connect to ISCSI drive"
+#
+#  $4
+#  err $? "Connecting ISCSI drive (3/3)" "Failed to connect to ISCSI drive"
+#
+#  echo "Successfully connected to ISCSI drive"
+#
+#  sudo mkfs -t ext4 /dev/sdb
+#  err $? "Formatting ISCSI drive" "Failed to format ISCSI drive"
+#
+#  uuid=$(sudo blkid /dev/sdb -o value | head -n 1)
+#  echo -e '\n\nUUID="$(uuid)"\t/mnt\text4\tdefaults,noatime,_netdev\t0 2' | sudo tee -a /etc/fstab
+#  err $? "Adding ISCSI drive to /etc/fstab" "Failed to write to /etc/fstab"
+#
+#  sudo mount -a
+#  err $? "Mounting ISCSI drive" "Failed to mount ISCSI drive"
+#
+#  sudo chmod a+rwx /mnt -R
+#  err $? "Writing permissions for ISCSI drive" "Failed to write ISCSI permissions"
+#else
+#    echo "Skipping ISCSI setup"
+#fi
+
+#sudo DEBIAN_FRONTEND=noninteractive apt-get update
+#err $? "Successfully updated package lists" "Error updating package lists! Stopping install"
+#
+#sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --allow-downgrades --allow-remove-essential --allow-change-held-packages
+#err $? "Successfully updated system" "Error updating system! Stopping install"
+#
+#sudo DEBIAN_FRONTEND=noninteractive apt-get install git -y
+#err $? "Successfully installed git" "Error installig Git! Stopping setup"
+#
+#if id -u git > /dev/null 2>&1; then
+#	echo "Git user already exists, deleting user."
+#	sudo deluser --remove-home git > /dev/null
+#
+#	if [ $? -ne 0 ]; then
+#		echo "Error deleting preexisting git user"
+#		exit 1
+#	fi
+#fi
+#
+#sudo adduser --gecos "" --disabled-password git > /dev/null
+#err $? "Successfully created new git user" "Error creating git user"
+
+#sudo mkdir -p /home/git/.ssh
+#err $? "Created /home/git/.ssh" "Error creating .ssh folder"
+
+#sudo cp /home/ubuntu/authorized_keys /home/git/.ssh/authorized_keys
+#err $? "Copied authorized_keys to git user" "Failed to copy authorized keys"
+
+#sudo chown -R git:git /home/git/.ssh
+#err $? "Changed owner of ssh directory" "Failed to change ssh directory ownership"
+
+#sudo chown -R git:git /home/git/.ssh/authorized_keys
+#err $? "Changed owner of authorized keys" "Failed to change authorized keys ownership"
+
+#sudo chmod 700 /home/git/.ssh
+#err $? "Changed permissions of ssh directory" "Failed to change ssh directory permissions"
+
+#sudo chmod 644 /home/git/.ssh/authorized_keys
+#err $? "Changed permission of authorized keys" "Failed to change permission of authorized keys"
+
+#mkdir -p .ssh
+#err $? "Creted ubuntu ssh directory" "Could not create ubuntu ssh directory"
+
+#echo -e 'Host gito\n\tStrictHostKeyChecking=no\n\tHostName 127.0.0.1\n\tUser git\n\tIdentityFile ~/.ssh/gito' > .ssh/config
+#err $? "Wrote ssh config file" "Failed to write config file"
+
+#mv ./gito ./.ssh/gito
+#err $? "Moved private ssh key to location" "Failed to move private ssh key"
+#
+#scp ./gituserinstall.sh gito:~/gituserinstall.sh
+#
+#ssh gito "chmod +x ~/gituserinstall.sh"
+#ssh gito "~/gituserinstall.sh"

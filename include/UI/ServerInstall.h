@@ -15,22 +15,34 @@ namespace bakermaker {
     class ServerInstall : public BaseUIScreen {
     private:
         static constexpr char SEPARATOR_STR[63] = "\n\n---------------------------------------------------------\n\n\0";
-        void runSSHCommand(ssh_session sess, const char* command);
+        int runSSHCommand(ssh_session sess, const char* command);
         void startNewCommand(const char* command);
 
-        char e[1] = {' '};
         ST::string instructions;
 
         ImGuiTextBuffer commandProgress;
         std::mutex bufferMutex;
         std::thread* exec;
-        std::atomic_int execProgress;
+        std::atomic_int success;
         std::atomic_bool execDone;
-        bool hasStartedExec;
         bool showCommandOutputs;
 
         std::mutex curcmd;
         ST::string curcmdstr;
+
+        struct InstallParams {
+            ST::string ip;
+            int port;
+            ST::string user;
+            ST::string keyfile;
+            ST::string adminkey;
+            bool useiscsi;
+            ST::string i1;
+            ST::string i2;
+            ST::string i3;
+        };
+
+        void install(const InstallParams& ip);
 
     public:
         ServerInstall();

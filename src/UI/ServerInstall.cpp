@@ -9,9 +9,8 @@
 
 namespace bakermaker {
     ServerInstall::ServerInstall() : BaseUIScreen(bakermaker::ProgramStage::SERVER_INSTALL, &bakermaker::setupScreens),
-                                     execDone(false), execProgress(0), bufferMutex(), hasStartedExec(false),
-                                     showCommandOutputs(false),
-                                     exec(nullptr) {
+                                     execDone(false), success(0), bufferMutex(),
+                                     showCommandOutputs(false), exec(nullptr) {
         romfs::Resource md = romfs::get("ServerInstallText.md");
         instructions = ST::string((const char*) md.data(), md.size());
     }
@@ -28,48 +27,35 @@ namespace bakermaker {
 
         if(config["keys"].empty()) ImGui::BeginDisabled();
 
+        if(exec && !execDone) ImGui::BeginDisabled();
+
         if(ImGui::Button("Begin##server_install_begin")) {
-            hasStartedExec = true;
+            if(config["useiscsi"].get<bool>() && (config["iscsi"][0].get<std::string>().empty() ||
+                                                  config["iscsi"][1].get<std::string>().empty() ||
+                                                  config["iscsi"][2].get<std::string>().empty())) {
+                bakermaker::startErrorModal("ISCSI is enabled, but not all fields are filled in.");
+            }
 
-            exec = new std::thread([this]() {
-                ssh_session ubuntu;
-                memset((void*) &ubuntu, 0, sizeof(ssh_session));
-                {
-                    int rc = bakermaker::createSession(ubuntu, config["server"]["ip"].get<std::string>().c_str(),
-                                                       config["server"]["user"].get<std::string>().c_str(),
-                                                       config["server"]["keyfile"].get<std::string>().c_str());
+            else {
+                ImGui::BeginDisabled();
 
-                    if(rc != SSH_OK) {
-                        return;
-                    }
-                }
+                bool useiscsi = config["useiscsi"].get<bool>();
+                InstallParams ip{config["server"]["ip"].get<std::string>(),
+                                 config["server"]["port"].get<int>(),
+                                 config["server"]["user"].get<std::string>(),
+                                 config["server"]["keyfile"].get<std::string>(),
+                                 config["keys"][0].get<std::string>(),
+                                 useiscsi,
+                                 useiscsi ? config["iscsi"][0].get<std::string>() + " " : "",
+                                 useiscsi ? config["iscsi"][1].get<std::string>() + " " : "",
+                                 useiscsi ? config["iscsi"][2].get<std::string>() + " " : ""};
+                exec = new std::thread(&ServerInstall::install, this, ip);
 
-                sftp_session sftp;
-                sftp = sftp_new(ubuntu);
-                sftp_init(sftp);
+            }
+        }
 
-                uploadToRemote(sftp, (ST::string("keys/") + config["keys"][0].get<std::string>()).c_str(),
-                               "gito");
+        if(exec && !execDone) {
 
-                uploadToRemote(sftp, (ST::string("keys/") + config["keys"][0].get<std::string>() + ".pub")
-                        .c_str(), "authorized_keys");
-
-                {
-                    romfs::Resource script = romfs::get("install.sh");
-                    uploadToRemote(sftp, (void*) script.data(), script.size(), "install.sh");
-                    script = romfs::get("commitall.sh");
-                    uploadToRemote(sftp, (void*) script.data(), script.size(), "commitall.sh");
-                }
-
-                sftp_free(sftp);
-
-                runSSHCommand(ubuntu, "chmod +x ~/install.sh");
-                runSSHCommand(ubuntu, "chmod +x ~/commitall.sh");
-                runSSHCommand(ubuntu, "~/install.sh");
-
-                ssh_disconnect(ubuntu);
-                ssh_free(ubuntu);
-            });
         }
 
         if(config["keys"].empty()) {
@@ -79,7 +65,7 @@ namespace bakermaker {
             ImGui::PopStyleColor();
         }
 
-        if(hasStartedExec) {
+        if(exec) {
             if(ImGui::Button("Show/Hide Command Outputs##serverinstall_commandoutputs")) {
                 showCommandOutputs = !showCommandOutputs;
             }
@@ -101,6 +87,11 @@ namespace bakermaker {
                         bufferMutex.unlock();
                     }
 
+                    ImGui::Separator();
+                    if(ImGui::Button("Close##command_screen")) {
+                        showCommandOutputs = false;
+                    }
+
                     ImGui::EndChild();
                 }
 
@@ -111,7 +102,7 @@ namespace bakermaker {
 
     }
 
-    void ServerInstall::runSSHCommand(ssh_session ses, const char* command) {
+    int ServerInstall::runSSHCommand(ssh_session ses, const char* command) {
         startNewCommand(command);
 
         ssh_channel ch = ssh_channel_new(ses);
@@ -129,9 +120,13 @@ namespace bakermaker {
             nbytes = ssh_channel_read(ch, buffer, sizeof(buffer), 0);
         }
 
+        int rc = ssh_channel_get_exit_status(ch);
+
         ssh_channel_send_eof(ch);
         ssh_channel_close(ch);
         ssh_channel_free(ch);
+
+        return rc;
     }
 
     void ServerInstall::startNewCommand(const char* command) {
@@ -142,5 +137,53 @@ namespace bakermaker {
         bufferMutex.lock();
         commandProgress.append(SEPARATOR_STR);
         bufferMutex.unlock();
+    }
+
+    void ServerInstall::install(const bakermaker::ServerInstall::InstallParams& ip) {
+        ssh_session ubuntu;
+        memset((void*) &ubuntu, 0, sizeof(ssh_session));
+        {
+            int rc = bakermaker::createSession(ubuntu, ip.ip.c_str(), ip.user.c_str(),
+                                               ip.keyfile.c_str(), ip.port);
+
+            if(rc != SSH_OK) {
+                return;
+            }
+        }
+
+        sftp_session sftp;
+        sftp = sftp_new(ubuntu);
+        sftp_init(sftp);
+
+        uploadToRemote(sftp, (ST::string("keys/") + ip.adminkey).c_str(),
+                       "gito");
+
+        uploadToRemote(sftp, (ST::string("keys/") + ip.adminkey + ".pub").c_str(), "authorized_keys");
+
+        {
+            romfs::Resource script = romfs::get("install.sh");
+            uploadToRemote(sftp, (void*) script.data(), script.size(), "install.sh");
+            script = romfs::get("commitall.sh");
+            uploadToRemote(sftp, (void*) script.data(), script.size(), "commitall.sh");
+            script = romfs::get("gituserinstall.sh");
+            uploadToRemote(sftp, (void*) script.data(), script.size(), "gituserinstall.sh");
+        }
+
+        sftp_free(sftp);
+
+        runSSHCommand(ubuntu, "chmod +x ~/install.sh");
+        runSSHCommand(ubuntu, "chmod +x ~/commitall.sh");
+        success = runSSHCommand(ubuntu, (ST::string("~/install.sh ") + (ip.useiscsi ? "1 " : "0 ") + ip.i1 + ip.i2 + ip.i3).c_str());
+
+        curcmd.lock();
+        curcmdstr = "Finished";
+        curcmd.unlock();
+
+        bufferMutex.lock();
+        commandProgress.append(SEPARATOR_STR);
+        bufferMutex.unlock();
+
+        ssh_disconnect(ubuntu);
+        ssh_free(ubuntu);
     }
 }

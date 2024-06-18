@@ -6,6 +6,7 @@ namespace bakermaker {
         strcpy_s(c1, config["iscsi"][0].get<std::string>().c_str());
         strcpy_s(c2, config["iscsi"][1].get<std::string>().c_str());
         strcpy_s(c3, config["iscsi"][2].get<std::string>().c_str());
+        useiscsi = config["useiscsi"].get<bool>();
     }
 
     void ServerSetup::render() {
@@ -16,7 +17,7 @@ namespace bakermaker {
 
         ImGui::Text("Use iSCSI Storage");
         ImGui::SameLine();
-        ImGui::Checkbox("##useiscsi", &useiscsi);
+        if(ImGui::Checkbox("##useiscsi", &useiscsi)) config["useiscsi"] = useiscsi;
 
         if(!useiscsi) ImGui::BeginDisabled();
         ImGui::Text("iSCSI Command 1: ");

@@ -67,6 +67,7 @@ namespace bakermaker {
             config = {
                     {"setup", false},
                     {"iscsi", {"", "", ""}},
+                    {"useiscsi", false},
                     {"server", {
                             {"ip", ""},
                             {"port", 22},
