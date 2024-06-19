@@ -8,9 +8,11 @@
 #include <iostream>
 
 namespace bakermaker {
-    ServerInstall::ServerInstall() : BaseUIScreen(bakermaker::ProgramStage::SERVER_INSTALL, &bakermaker::setupScreens),
-                                     execDone(false), success(0), bufferMutex(),
-                                     showCommandOutputs(false), exec(nullptr) {
+    ServerInstall::ServerInstall()
+            :
+            BaseUIScreen(bakermaker::ProgramStage::SERVER_INSTALL, &bakermaker::setupScreens),
+            execDone(false), success(0), bufferMutex(),
+            showCommandOutputs(false), exec(nullptr) {
         romfs::Resource md = romfs::get("ServerInstallText.md");
         instructions = ST::string((const char*) md.data(), md.size());
     }
@@ -25,7 +27,8 @@ namespace bakermaker {
 
         ImGui::NewLine();
 
-        if(config["keys"].empty() || (exec && !execDone) || (execDone && success == 0)) ImGui::BeginDisabled();
+        if(config["keys"].empty() || (exec && !execDone) || (execDone && success == 0))
+            ImGui::BeginDisabled();
 
         if(ImGui::Button("Begin##server_install_begin")) {
             if(config["useiscsi"].get<bool>() && (config["iscsi"][0].get<std::string>().empty() ||
@@ -46,9 +49,12 @@ namespace bakermaker {
                                  config["server"]["keyfile"].get<std::string>(),
                                  config["keys"][0].get<std::string>(),
                                  useiscsi,
-                                 useiscsi ? '"' + config["iscsi"][0].get<std::string>() + "\" " : "",
-                                 useiscsi ? '"' + config["iscsi"][1].get<std::string>() + "\" " : "",
-                                 useiscsi ? '"' + config["iscsi"][2].get<std::string>() + "\" " : ""};
+                                 useiscsi ? '"' + config["iscsi"][0].get<std::string>() + "\" "
+                                          : "",
+                                 useiscsi ? '"' + config["iscsi"][1].get<std::string>() + "\" "
+                                          : "",
+                                 useiscsi ? '"' + config["iscsi"][2].get<std::string>() + "\" "
+                                          : ""};
                 exec = new std::thread(&ServerInstall::install, this, ip);
             }
         }
@@ -73,8 +79,9 @@ namespace bakermaker {
                 exec = nullptr;
 
                 if(success == 1) bakermaker::startErrorModal("Failed when connecting to server!");
-                else if(success == -1) bakermaker::startErrorModal("Failed when installing components. "
-                                       "Read log to find issue. Press \"Begin\" again to resume at last failed commmand.");
+                else if(success == -1)
+                    bakermaker::startErrorModal("Failed when installing components. "
+                                                "Read log to find issue. Press \"Begin\" again to resume at last failed commmand.");
             }
 
             if(success == 0) {
@@ -92,7 +99,8 @@ namespace bakermaker {
             }
         }
 
-        if(exec && ImGui::Button("Show/Hide Command Outputs")) showCommandOutputs = !showCommandOutputs;
+        if(exec && ImGui::Button("Show/Hide Command Outputs"))
+            showCommandOutputs = !showCommandOutputs;
 
         if(showCommandOutputs) {
             ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
@@ -174,29 +182,34 @@ namespace bakermaker {
         }
 
         sftp_session sftp;
-        sftp = sftp_new(ubuntu);
-        sftp_init(sftp);
 
-        uploadToRemote(sftp, (ST::string("keys/") + ip.adminkey).c_str(),
-                       "gito");
+        if(runSSHCommand(ubuntu, "test -f progress") == 1) {
+            sftp = sftp_new(ubuntu);
+            sftp_init(sftp);
 
-        uploadToRemote(sftp, (ST::string("keys/") + ip.adminkey + ".pub").c_str(), "authorized_keys");
+            uploadToRemote(sftp, (ST::string("keys/") + ip.adminkey).c_str(),
+                           "gito");
 
-        {
-            romfs::Resource script = romfs::get("install.sh");
-            uploadToRemote(sftp, (void*) script.data(), script.size(), "install.sh");
-            script = romfs::get("commitall.sh");
-            uploadToRemote(sftp, (void*) script.data(), script.size(), "commitall.sh");
-            script = romfs::get("gituserinstall.sh");
-            uploadToRemote(sftp, (void*) script.data(), script.size(), "gituserinstall.sh");
+            uploadToRemote(sftp, (ST::string("keys/") + ip.adminkey + ".pub").c_str(),
+                           "authorized_keys");
+
+            {
+                romfs::Resource script = romfs::get("install.sh");
+                uploadToRemote(sftp, (void*) script.data(), script.size(), "install.sh");
+                script = romfs::get("commitall.sh");
+                uploadToRemote(sftp, (void*) script.data(), script.size(), "commitall.sh");
+                script = romfs::get("gituserinstall.sh");
+                uploadToRemote(sftp, (void*) script.data(), script.size(), "gituserinstall.sh");
+            }
+
+            sftp_free(sftp);
+
+            runSSHCommand(ubuntu, "chmod +x ~/install.sh");
+            runSSHCommand(ubuntu, "chmod +x ~/commitall.sh");
         }
 
-        sftp_free(sftp);
-
-        runSSHCommand(ubuntu, "chmod +x ~/install.sh");
-        runSSHCommand(ubuntu, "chmod +x ~/commitall.sh");
-        success = runSSHCommand(ubuntu, (ST::string("~/install.sh ") + (ip.useiscsi ? "1 " : "0 ") + ip.i1 + ip.i2 +
-                                         ip.i3).c_str());
+        success = runSSHCommand(ubuntu, (ST::string("~/install.sh ") + (ip.useiscsi ? "1 " : "0 ") +
+                                         ip.i1 + ip.i2 + ip.i3).c_str());
 
         curcmd.lock();
         curcmdstr = "Finished";
