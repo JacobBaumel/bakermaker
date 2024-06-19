@@ -78,8 +78,8 @@ namespace bakermaker {
                 delete exec;
                 exec = nullptr;
 
-                if(success == 1) bakermaker::startErrorModal("Failed when connecting to server!");
-                else if(success == -1)
+                if(success == -1) bakermaker::startErrorModal("Failed when connecting to server!");
+                else if(success == 1)
                     bakermaker::startErrorModal("Failed when installing components. "
                                                 "Read log to find issue. Press \"Begin\" again to resume at last failed commmand.");
             }
