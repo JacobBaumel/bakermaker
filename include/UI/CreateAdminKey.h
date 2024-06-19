@@ -10,13 +10,14 @@
 #include <vector>
 #include <thread>
 #include <atomic>
+#include "utils.h"
 
 namespace bakermaker {
     class CreateAdminKey : public BaseUIScreen {
     private:
         ST::string instructions;
 
-        char* newName;
+        char newName[USERLENGTH] = {'\0'};
 
         std::thread* exec;
         std::atomic_bool execDone;

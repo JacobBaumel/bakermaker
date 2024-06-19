@@ -25,9 +25,7 @@ namespace bakermaker {
 
         ImGui::NewLine();
 
-        if(config["keys"].empty()) ImGui::BeginDisabled();
-
-        if(exec && !execDone) ImGui::BeginDisabled();
+        if(config["keys"].empty() || (exec && !execDone) || (execDone && success == 0)) ImGui::BeginDisabled();
 
         if(ImGui::Button("Begin##server_install_begin")) {
             if(config["useiscsi"].get<bool>() && (config["iscsi"][0].get<std::string>().empty() ||
@@ -39,6 +37,8 @@ namespace bakermaker {
             else {
                 ImGui::BeginDisabled();
 
+                execDone = false;
+                success = 0;
                 bool useiscsi = config["useiscsi"].get<bool>();
                 InstallParams ip{config["server"]["ip"].get<std::string>(),
                                  config["server"]["port"].get<int>(),
@@ -46,16 +46,11 @@ namespace bakermaker {
                                  config["server"]["keyfile"].get<std::string>(),
                                  config["keys"][0].get<std::string>(),
                                  useiscsi,
-                                 useiscsi ? config["iscsi"][0].get<std::string>() + " " : "",
-                                 useiscsi ? config["iscsi"][1].get<std::string>() + " " : "",
-                                 useiscsi ? config["iscsi"][2].get<std::string>() + " " : ""};
+                                 useiscsi ? '"' + config["iscsi"][0].get<std::string>() + "\" " : "",
+                                 useiscsi ? '"' + config["iscsi"][1].get<std::string>() + "\" " : "",
+                                 useiscsi ? '"' + config["iscsi"][2].get<std::string>() + "\" " : ""};
                 exec = new std::thread(&ServerInstall::install, this, ip);
-
             }
-        }
-
-        if(exec && !execDone) {
-
         }
 
         if(config["keys"].empty()) {
@@ -65,41 +60,67 @@ namespace bakermaker {
             ImGui::PopStyleColor();
         }
 
-        if(exec) {
-            if(ImGui::Button("Show/Hide Command Outputs##serverinstall_commandoutputs")) {
-                showCommandOutputs = !showCommandOutputs;
+        if(exec && !execDone) {
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            bakermaker::spinner();
+        }
+
+        if(execDone) {
+            if(exec) {
+                exec->join();
+                delete exec;
+                exec = nullptr;
+
+                if(success == 1) bakermaker::startErrorModal("Failed when connecting to server!");
+                else if(success == -1) bakermaker::startErrorModal("Failed when installing components. "
+                                       "Read log to find issue. Press \"Begin\" again to resume at last failed commmand.");
             }
 
-            if(showCommandOutputs) {
-                ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
-                if(ImGui::Begin("Command Output")) {
-                    ImGui::PushFont(fontlist[1]);
-                    curcmd.lock();
-                    ImGui::Text("Current Command: %s", curcmdstr.c_str());
-                    curcmd.unlock();
-                    ImGui::PopFont();
+            if(success == 0) {
+                ImGui::EndDisabled();
 
-                    ImGui::Separator();
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+                ImGui::Text("Installation Successful!");
+                ImGui::PopStyleColor();
 
-                    if(ImGui::BeginChild("cmdout##serverinstall")) {
-                        bufferMutex.lock();
-                        ImGui::TextUnformatted(commandProgress.c_str());
-                        bufferMutex.unlock();
-                    }
+                ImGui::SameLine();
 
-                    ImGui::Separator();
-                    if(ImGui::Button("Close##command_screen")) {
-                        showCommandOutputs = false;
-                    }
-
-                    ImGui::EndChild();
+                if(ImGui::Button("Ok##installok")) {
+                    config["setup"] = true;
                 }
-
-                ImGui::End();
             }
         }
 
+        if(exec && ImGui::Button("Show/Hide Command Outputs")) showCommandOutputs = !showCommandOutputs;
 
+        if(showCommandOutputs) {
+            ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
+            if(ImGui::Begin("Command Output")) {
+                ImGui::PushFont(fontlist[1]);
+                curcmd.lock();
+                ImGui::Text("Current Command: %s", curcmdstr.c_str());
+                curcmd.unlock();
+                ImGui::PopFont();
+
+                ImGui::Separator();
+
+                if(ImGui::BeginChild("cmdout##serverinstall")) {
+                    bufferMutex.lock();
+                    ImGui::TextUnformatted(commandProgress.c_str());
+                    bufferMutex.unlock();
+                }
+
+                ImGui::Separator();
+                if(ImGui::Button("Close##command_screen")) {
+                    showCommandOutputs = false;
+                }
+
+                ImGui::EndChild();
+            }
+
+            ImGui::End();
+        }
     }
 
     int ServerInstall::runSSHCommand(ssh_session ses, const char* command) {
@@ -147,6 +168,7 @@ namespace bakermaker {
                                                ip.keyfile.c_str(), ip.port);
 
             if(rc != SSH_OK) {
+                success = -1;
                 return;
             }
         }
@@ -173,7 +195,8 @@ namespace bakermaker {
 
         runSSHCommand(ubuntu, "chmod +x ~/install.sh");
         runSSHCommand(ubuntu, "chmod +x ~/commitall.sh");
-        success = runSSHCommand(ubuntu, (ST::string("~/install.sh ") + (ip.useiscsi ? "1 " : "0 ") + ip.i1 + ip.i2 + ip.i3).c_str());
+        success = runSSHCommand(ubuntu, (ST::string("~/install.sh ") + (ip.useiscsi ? "1 " : "0 ") + ip.i1 + ip.i2 +
+                                         ip.i3).c_str());
 
         curcmd.lock();
         curcmdstr = "Finished";
@@ -185,5 +208,7 @@ namespace bakermaker {
 
         ssh_disconnect(ubuntu);
         ssh_free(ubuntu);
+
+        execDone = true;
     }
 }

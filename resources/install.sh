@@ -57,7 +57,7 @@ case $(cat progress) in
   4)
     if [ $1 -eq 1 ]; then
       uuid=$(sudo blkid /dev/sdb -o value | head -n 1)
-      echo -e '\n\nUUID="$(uuid)"\t/mnt\text4\tdefaults,noatime,_netdev\t0 2' | sudo tee -a /etc/fstab
+      echo -e '\n\nUUID=\"' $uuid '\"\t/mnt\text4\tdefaults,noatime,_netdev\t0 2' | sudo tee -a /etc/fstab
       err $? "Adding ISCSI drive to /etc/fstab" "Failed to write to /etc/fstab"
     fi
 

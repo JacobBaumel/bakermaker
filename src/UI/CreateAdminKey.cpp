@@ -11,9 +11,14 @@
 
 namespace bakermaker {
     CreateAdminKey::CreateAdminKey() : BaseUIScreen(bakermaker::ProgramStage::SSH_KEYGEN_ADMIN, &bakermaker::setupScreens),
-                                       exec(nullptr), success(0), newName(new char[64]{'\0'}), execDone(false) {
+                                       exec(nullptr), success(0), execDone(false) {
         romfs::Resource text = romfs::get("SSHAdminKeyGen.md");
         instructions = ST::string((char*) text.data(), text.size());
+
+        if(!config["keys"].empty()) {
+            strcpy_s(newName, config["keys"][0].get<std::string>().c_str());
+            execDone = true;
+        }
 
         if(!std::filesystem::exists("keys") && !std::filesystem::is_directory("keys"))
             std::filesystem::create_directories("keys");
@@ -29,7 +34,7 @@ namespace bakermaker {
         ImGui::NewLine();
 
         ImGui::Text("Create admin user: ");
-        if((exec && !execDone) || execDone) ImGui::BeginDisabled();
+        if((exec && !execDone) || execDone || !config["keys"].empty()) ImGui::BeginDisabled();
         ImGui::SetNextItemWidth(600);
         ImGui::InputText("##newuserenter", newName, USERLENGTH);
         ImGui::SameLine();
@@ -48,7 +53,7 @@ namespace bakermaker {
             }
         }
 
-        if((exec && !execDone) || execDone) {
+        if((exec && !execDone) || execDone || !config["keys"].empty()) {
             ImGui::EndDisabled();
             ImGui::SameLine();
             if(!execDone) bakermaker::spinner();
