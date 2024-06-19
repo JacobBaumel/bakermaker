@@ -14,7 +14,6 @@ namespace bakermaker {
         extrThread = new std::thread([this](){
             romfs::Resource libs = romfs::get("libs.zip");
             unzip_from_mem((void*) libs.data(), libs.size());
-
             extrDone = true;
         });
     }
@@ -33,7 +32,15 @@ namespace bakermaker {
                 bakermaker::spinner();
             }
 
-            else ImGui::Text("Library Extraction Complete. Please restart the program.");
+            else {
+                if(extrThread) {
+                    extrThread->join();
+                    delete extrThread;
+                    extrThread = nullptr;
+                }
+
+                ImGui::Text("Library Extraction Complete. Please restart the program.");
+            }
         }
 
         ImGui::End();
