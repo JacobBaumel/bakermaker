@@ -12,6 +12,8 @@ namespace bakermaker {
     }
 
     void UserManage::render() {
+        if(!config["synced"].get<bool>()) ImGui::BeginDisabled();
+
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Manage Users");
         ImGui::PopFont();
@@ -106,5 +108,6 @@ namespace bakermaker {
             ImGui::EndTable();
         }
 
+        if(!config["synced"].get<bool>()) ImGui::EndDisabled();
     }
 }

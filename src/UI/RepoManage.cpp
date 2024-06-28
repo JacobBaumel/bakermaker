@@ -18,6 +18,7 @@ namespace bakermaker {
         reponames(), selectedName(1) {}
 
     void RepoManage::render() {
+        if(!config["synced"].get<bool>()) ImGui::BeginDisabled();
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Manage Repositories");
         ImGui::PopFont();
@@ -131,7 +132,7 @@ namespace bakermaker {
             vectormutex.unlock();
         }
 
-
+        if(!config["synced"].get<bool>()) ImGui::EndDisabled();
     }
 
     void RepoManage::fetchRepoData(std::atomic_bool* execDone_, std::atomic_int* success_) {

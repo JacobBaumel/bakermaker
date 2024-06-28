@@ -1,7 +1,3 @@
-//
-// Created by skipp on 5/13/2024.
-//
-
 #ifndef BAKERMAKER_REPOMANAGE_H
 #define BAKERMAKER_REPOMANAGE_H
 
