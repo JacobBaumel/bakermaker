@@ -19,6 +19,7 @@ namespace bakermaker {
         SERVER_CONNECT,
         SSH_KEYGEN_ADMIN,
         SERVER_INSTALL,
+        SYNC_TO_SERVER,
         USER_MANAGE,
         REPO_MANAGE,
 

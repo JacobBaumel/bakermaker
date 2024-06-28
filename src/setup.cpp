@@ -14,6 +14,7 @@
 #include "UI/ServerConnect.h"
 #include "UI/ServerInstall.h"
 #include "UI/CreateAdminKey.h"
+#include "UI/SyncToServer.h"
 #include "UI/UserManage.h"
 #include "UI/RepoManage.h"
 
@@ -82,6 +83,7 @@ namespace bakermaker {
         new bakermaker::ServerConnect();
         new bakermaker::ServerInstall();
         new bakermaker::CreateAdminKey();
+        new bakermaker::SyncToServer();
         new bakermaker::UserManage();
         new bakermaker::RepoManage();
     }

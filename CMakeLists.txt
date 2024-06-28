@@ -33,6 +33,7 @@ add_executable(bakermaker src/main.cpp libs/imgui/imgui.cpp libs/imgui/imgui_dra
         src/utils.cpp
         src/UI/RepoManage.cpp
         src/UI/UserManage.cpp
+        src/UI/SyncToServer.cpp
 )
 
 set(string_theory_FOUND 1)

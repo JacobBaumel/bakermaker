@@ -177,6 +177,7 @@ namespace bakermaker {
 
             if(rc != SSH_OK) {
                 success = -1;
+                execDone = true;
                 return;
             }
         }
