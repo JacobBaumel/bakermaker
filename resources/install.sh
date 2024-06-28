@@ -226,91 +226,41 @@ case $(cat progress) in
     git clone gito:gitolite-admin
     err $? "Cloned administrative repository" "Failed to clone administrative repository"
 
+    prog 26
+    ;&
+
+  26)
+    git config --global user.name "admin"
+    err $? "Set git name" "Failed to set git name"
+
+    prog 27
+    ;&
+
+  27)
+    git config --global user.email "admin"
+    err $? "Set git email" "Failed to set git email"
+
+    prog 28
+    ;&
+
+  28)
+    echo -e 'repo gitolite-admin\n\tRW+\t=\tadmin' > gitolite-admin/conf/gitolite.conf
+    err $? "Wrote to gitolite config file" "Failed to write to gitolite config file"
+
+    prog 29
+    ;&
+
+  29)
+    /home/ubuntu/commitall.sh
+    err $? "Committed changes" "Failed to commit changes"
+
+    prog 30
+    ;&
+
+  30)
+    sudo rm -rf /home/git/repositories/testing.git
+
     ;;
 esac
 
 echo "Finished installing git server"
-
-#
-#if [ $1 -eq 1 ]; then
-#  echo "Setting up ISCSI drive"
-#  $2
-#  err $? "Connecting ISCSI drive (1/3)" "Failed to connect to ISCSI drive"
-#
-#  $3
-#  err $? "Connecting ISCSI drive (2/3)" "Failed to connect to ISCSI drive"
-#
-#  $4
-#  err $? "Connecting ISCSI drive (3/3)" "Failed to connect to ISCSI drive"
-#
-#  echo "Successfully connected to ISCSI drive"
-#
-#  sudo mkfs -t ext4 /dev/sdb
-#  err $? "Formatting ISCSI drive" "Failed to format ISCSI drive"
-#
-#  uuid=$(sudo blkid /dev/sdb -o value | head -n 1)
-#  echo -e '\n\nUUID="$(uuid)"\t/mnt\text4\tdefaults,noatime,_netdev\t0 2' | sudo tee -a /etc/fstab
-#  err $? "Adding ISCSI drive to /etc/fstab" "Failed to write to /etc/fstab"
-#
-#  sudo mount -a
-#  err $? "Mounting ISCSI drive" "Failed to mount ISCSI drive"
-#
-#  sudo chmod a+rwx /mnt -R
-#  err $? "Writing permissions for ISCSI drive" "Failed to write ISCSI permissions"
-#else
-#    echo "Skipping ISCSI setup"
-#fi
-
-#sudo DEBIAN_FRONTEND=noninteractive apt-get update
-#err $? "Successfully updated package lists" "Error updating package lists! Stopping install"
-#
-#sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --allow-downgrades --allow-remove-essential --allow-change-held-packages
-#err $? "Successfully updated system" "Error updating system! Stopping install"
-#
-#sudo DEBIAN_FRONTEND=noninteractive apt-get install git -y
-#err $? "Successfully installed git" "Error installig Git! Stopping setup"
-#
-#if id -u git > /dev/null 2>&1; then
-#	echo "Git user already exists, deleting user."
-#	sudo deluser --remove-home git > /dev/null
-#
-#	if [ $? -ne 0 ]; then
-#		echo "Error deleting preexisting git user"
-#		exit 1
-#	fi
-#fi
-#
-#sudo adduser --gecos "" --disabled-password git > /dev/null
-#err $? "Successfully created new git user" "Error creating git user"
-
-#sudo mkdir -p /home/git/.ssh
-#err $? "Created /home/git/.ssh" "Error creating .ssh folder"
-
-#sudo cp /home/ubuntu/authorized_keys /home/git/.ssh/authorized_keys
-#err $? "Copied authorized_keys to git user" "Failed to copy authorized keys"
-
-#sudo chown -R git:git /home/git/.ssh
-#err $? "Changed owner of ssh directory" "Failed to change ssh directory ownership"
-
-#sudo chown -R git:git /home/git/.ssh/authorized_keys
-#err $? "Changed owner of authorized keys" "Failed to change authorized keys ownership"
-
-#sudo chmod 700 /home/git/.ssh
-#err $? "Changed permissions of ssh directory" "Failed to change ssh directory permissions"
-
-#sudo chmod 644 /home/git/.ssh/authorized_keys
-#err $? "Changed permission of authorized keys" "Failed to change permission of authorized keys"
-
-#mkdir -p .ssh
-#err $? "Creted ubuntu ssh directory" "Could not create ubuntu ssh directory"
-
-#echo -e 'Host gito\n\tStrictHostKeyChecking=no\n\tHostName 127.0.0.1\n\tUser git\n\tIdentityFile ~/.ssh/gito' > .ssh/config
-#err $? "Wrote ssh config file" "Failed to write config file"
-
-#mv ./gito ./.ssh/gito
-#err $? "Moved private ssh key to location" "Failed to move private ssh key"
-#
-#scp ./gituserinstall.sh gito:~/gituserinstall.sh
-#
-#ssh gito "chmod +x ~/gituserinstall.sh"
-#ssh gito "~/gituserinstall.sh"

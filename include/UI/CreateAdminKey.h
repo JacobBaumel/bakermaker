@@ -17,8 +17,6 @@ namespace bakermaker {
     private:
         ST::string instructions;
 
-        char newName[USERLENGTH] = {'\0'};
-
         std::thread* exec;
         std::atomic_bool execDone;
         std::atomic_int success;

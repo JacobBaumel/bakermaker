@@ -15,11 +15,6 @@ namespace bakermaker {
         romfs::Resource text = romfs::get("SSHAdminKeyGen.md");
         instructions = ST::string((char*) text.data(), text.size());
 
-        if(!config["keys"].empty()) {
-            strcpy_s(newName, config["keys"][0].get<std::string>().c_str());
-            execDone = true;
-        }
-
         if(!std::filesystem::exists("keys") && !std::filesystem::is_directory("keys"))
             std::filesystem::create_directories("keys");
     }
@@ -35,20 +30,17 @@ namespace bakermaker {
 
         ImGui::Text("Create admin user: ");
         if((exec && !execDone) || execDone || !config["keys"].empty()) ImGui::BeginDisabled();
-        ImGui::SetNextItemWidth(600);
-        ImGui::InputText("##newuserenter", newName, USERLENGTH);
-        ImGui::SameLine();
 
-        if(ImGui::Button("Add User")) {
+        if(ImGui::Button("Create Admin User")) {
             execDone = false;
 
             std::set<std::string> users = config["keys"].get<std::set<std::string>>();
 
-            if(users.contains(std::string(newName))) {
-                bakermaker::startErrorModal((ST::string("User \"") + newName + "\" has already been added.").c_str());
+            if(users.contains(std::string("admin"))) {
+                bakermaker::startErrorModal("User admin has already been added.");
             }
             else {
-                exec = new std::thread(&bakermaker::createUser, newName, &execDone, &success);
+                exec = new std::thread(&bakermaker::createUser, "admin", &execDone, &success);
                 ImGui::BeginDisabled();
             }
         }
@@ -67,7 +59,7 @@ namespace bakermaker {
 
                 switch(success) {
                     case 0:
-                        config["keys"].push_back(newName);
+                        config["keys"].push_back("admin");
                         break;
 
                     case 1:
