@@ -7,6 +7,7 @@
 
 #include "GLFW/glfw3.h"
 #include "string_theory/string"
+#include "STStringJson.h"
 #include "ImguiMarkdownRender.h"
 #include "UI/BaseUIScreen.h"
 #include "nlohmann/json.hpp"

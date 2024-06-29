@@ -14,6 +14,7 @@ namespace bakermaker {
     int genSSHKeyToFile(const char* filename);
     int uploadToRemote(sftp_session s, const char* filepath, const char* remotepath);
     int uploadToRemote(sftp_session s, void* data, size_t size, const char* remotepath);
+    int downloadToLocal(sftp_session sftp, const char* remotepath, const char* localpath, const size_t block_size = 128);
 }
 
 #endif //TEST_MD_SSH_HELPER_H

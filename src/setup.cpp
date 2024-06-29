@@ -5,6 +5,7 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
 #include "string_theory/string"
+#include "STStringJson.h"
 #include "romfs/romfs.hpp"
 #include <fstream>
 #include "nlohmann/json.hpp"

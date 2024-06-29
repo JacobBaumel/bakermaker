@@ -2,6 +2,7 @@
 #define BAKERMAKER_REPOMANAGE_H
 
 #include "UI/BaseUIScreen.h"
+#include "UI/SyncToServer.h"
 #include <thread>
 #include <atomic>
 #include "string_theory/string"
@@ -13,6 +14,8 @@ namespace bakermaker {
     using namespace ST::literals;
 
     class RepoManage : public BaseUIScreen {
+        friend class SyncToServer;
+
     private:
         static constexpr int NEW_REPO_NAME_LENGTH = 64;
 
@@ -48,6 +51,7 @@ namespace bakermaker {
 
         void fetchRepoData(std::atomic_bool* execDone_, std::atomic_int* success_);
         void writeRepoData(std::atomic_bool* execDone_, std::atomic_int* success_);
+        void reset();
 
     public:
         RepoManage();

@@ -126,4 +126,42 @@ namespace bakermaker {
 
         return rc == 0 ? -2 : 0;
     }
+
+    int downloadToLocal(sftp_session sftp, const char* remotepath, const char* localpath, const size_t block_size) {
+        sftp_file file = sftp_open(sftp, remotepath, O_RDONLY, 0);
+
+        if(file == nullptr) return -1;
+
+        FILE* localfile;
+        fopen_s(&localfile, localpath, "w");
+
+        if(localfile == nullptr) return -2;
+
+        while(true) {
+            char* buf = new char[block_size];
+            ssize_t nbytes = sftp_read(file, buf, block_size);
+            if(nbytes == 0) break;
+            else if(nbytes < 0) {
+                fclose(localfile);
+                sftp_close(file);
+                delete[] buf;
+                return -3;
+            }
+
+            size_t nwritten = fwrite(buf, 1, nbytes, localfile);
+
+            if(nwritten != nbytes) {
+                fclose(localfile);
+                sftp_close(file);
+                delete[] buf;
+                return -4;
+            }
+
+            delete[] buf;
+        }
+
+        fclose(localfile);
+        sftp_close(file);
+        return 0;
+    }
 }

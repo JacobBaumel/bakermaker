@@ -1,11 +1,7 @@
 #include <set>
-#include <chrono>
 #include <iostream>
 #include "ssh_helper.h"
-#include <filesystem>
-#include "romfs/romfs.hpp"
 #include "UI/BaseUIScreen.h"
-#include "UI/CreateAdminKey.h"
 #include "utils.h"
 #include "improgress.h"
 
@@ -55,7 +51,7 @@ namespace bakermaker {
             ImGui::SetNextWindowPos(screenSize);
             if(ImGui::Begin("Error Modal", &showErrorModal, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove)) {
                 ImGui::Text("Encountered an error:");
-                ImGui::TextUnformatted(error.c_str());
+                ImGui::TextWrapped("%s", error.c_str());
                 if(ImGui::Button("Close")) showErrorModal = false;
             }
 

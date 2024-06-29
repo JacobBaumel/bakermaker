@@ -5,6 +5,8 @@
 
 #include <thread>
 #include <atomic>
+#include <mutex>
+#include "string_theory/string"
 
 namespace bakermaker {
     class SyncToServer : public BaseUIScreen {
@@ -15,6 +17,10 @@ namespace bakermaker {
         std::atomic_bool execDone;
         std::atomic_int success;
 
+        std::mutex statusmutex;
+        ST::string status;
+
+        void setStatus(int rc);
         void syncFrom();
         void syncTo();
 

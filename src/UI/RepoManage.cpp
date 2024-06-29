@@ -189,4 +189,8 @@ namespace bakermaker {
     void RepoManage::writeRepoData(std::atomic_bool* execDone_, std::atomic_int* success_) {
 
     }
+
+    void RepoManage::reset() {
+
+    }
 }
