@@ -43,11 +43,12 @@ namespace bakermaker {
 
     void displayErrorModal() {
         if(showErrorModal) {
-            ImGui::SetNextWindowSize(MODAL_SIZE);
+            ImVec2 size = ImVec2(525, 100 + (error.size() / 75) * 15);
+            ImGui::SetNextWindowSize(size);
             ImGui::SetNextWindowFocus();
             ImVec2 screenSize = ImGui::GetIO().DisplaySize;
-            screenSize.x = (screenSize.x - MODAL_SIZE.x) / 2;
-            screenSize.y = (screenSize.y - MODAL_SIZE.y) / 2;
+            screenSize.x = (screenSize.x - size.x) / 2;
+            screenSize.y = (screenSize.y - size.y) / 2;
             ImGui::SetNextWindowPos(screenSize);
             if(ImGui::Begin("Error Modal", &showErrorModal, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove)) {
                 ImGui::Text("Encountered an error:");
