@@ -68,6 +68,7 @@ namespace bakermaker {
         else {
             config = {
                     {"synced", false},
+                    {"unsaved", false},
                     {"setup", false},
                     {"iscsi", {"", "", ""}},
                     {"useiscsi", false},

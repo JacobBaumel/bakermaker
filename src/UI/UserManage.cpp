@@ -6,7 +6,8 @@
 
 namespace bakermaker {
     UserManage::UserManage() : BaseUIScreen(bakermaker::ProgramStage::USER_MANAGE,
-        &bakermaker::configScreens), exec(nullptr), execDone(false), success(0) {
+                                            &bakermaker::configScreens), exec(nullptr),
+                               execDone(false), success(0) {
         if(!std::filesystem::exists("keys") && !std::filesystem::is_directory("keys"))
             std::filesystem::create_directories("keys");
     }
@@ -23,6 +24,7 @@ namespace bakermaker {
 
         ImGui::Text("Enter New User: ");
         ImGui::SameLine();
+        ImGui::SetNextItemWidth(600);
         ImGui::InputText("##newuser_enter", newName, USERLENGTH);
         ImGui::SameLine();
 
@@ -32,7 +34,8 @@ namespace bakermaker {
             std::set<std::string> users = config["keys"].get<std::set<std::string>>();
 
             if(users.contains(std::string(newName))) {
-                bakermaker::startErrorModal((ST::string("User \"") + newName + "\" has already been added.").c_str());
+                bakermaker::startErrorModal(
+                        (ST::string("User \"") + newName + "\" has already been added.").c_str());
             }
             else {
                 exec = new std::thread(&bakermaker::createUser, newName, &execDone, &success);
@@ -51,11 +54,11 @@ namespace bakermaker {
                 exec->join();
                 delete exec;
                 exec = nullptr;
-                std::cout << "eeee" << std::endl;
 
                 switch(success) {
                     case 0:
                         config["keys"].push_back(newName);
+                        config["unsaved"] = true;
                         break;
 
                     case 1:
@@ -83,7 +86,8 @@ namespace bakermaker {
             }
         }
 
-        if(ImGui::BeginTable("table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(600, 0))) {
+        if(ImGui::BeginTable("table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg,
+                             ImVec2(600, 0))) {
             ImGui::TableSetupColumn("Name");
             ImGui::TableSetupColumn("Remove");
             ImGui::TableHeadersRow();
@@ -91,17 +95,20 @@ namespace bakermaker {
             ImGui::TableNextRow();
 
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted(config["keys"][0].get<std::string>().c_str());
+            ImGui::Text("admin");
             ImGui::TableNextColumn();
             ImGui::Text("Admin");
 
             for(int i = 1; i < config["keys"].size(); i++) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted(config["keys"][i].get<std::string>().c_str());
+                ImGui::TextUnformatted(config["keys"][i].get<ST::string>().substr(5).c_str());
                 ImGui::TableNextColumn();
                 if(ImGui::Button((ST::string("Delete##") + std::to_string(i)).c_str())) {
-
+                    std::filesystem::remove(config["keys"][i].get<ST::string>().c_str());
+                    std::filesystem::remove((config["keys"][i].get<ST::string>() + ".pub").c_str());
+                    config["keys"].erase(i);
+                    config["unsaved"] = true;
                 }
             }
 
