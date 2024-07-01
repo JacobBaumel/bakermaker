@@ -33,7 +33,14 @@ namespace bakermaker {
 
         ImGui::SameLine();
 
-        if(ImGui::Button("Save changes to server")) {}
+        if(ImGui::Button("Save changes to server")) {
+            execDone = false;
+            success = 0;
+            status = "Saving to server";
+            config["synced"] = false;
+            exec = new std::thread(&SyncToServer::syncTo, this);
+            ImGui::BeginDisabled();
+        }
 
         if(exec && !execDone) {
             ImGui::EndDisabled();
@@ -52,13 +59,23 @@ namespace bakermaker {
 
                 if(success < 0) {
                     bakermaker::startErrorModal(
-                            (ST::string("Sync failed with error ") + std::to_string(success) +
-                             '\n' + status).c_str());
+                            (ST::string("Sync failed with error: ") + std::to_string(success) +
+                             "\n\n" + status).c_str());
                 }
 
-                if(success == 1) {
-                    bakermaker::startErrorModal((ST::string("Sync was successful, with status:\n\n") + status).c_str());
+                else if(success > 0) {
+                    bakermaker::startErrorModal(
+                            (ST::string("Save failed with error: ") + std::to_string(success) +
+                             "\n\n" + status).c_str());
                 }
+
+                else config["synced"] = true;
+            }
+
+            else if(success == 0) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+                ImGui::Text("Success!");
+                ImGui::PopStyleColor();
             }
         }
 
@@ -184,7 +201,7 @@ namespace bakermaker {
             }
         }
 
-        for(const auto& str : nopriv) files.erase(str);
+        for(const auto& str: nopriv) files.erase(str);
         std::erase_if(files, [](const ST::string& str) { return str.ends_with(".pub"); });
         config["keys"] = files;
 
@@ -212,7 +229,6 @@ namespace bakermaker {
         status.clear();
 
         if(!nopriv.empty()) {
-            success = 1;
             status += "The following public keys were present on the server, but their corresponding private keys were not"
                       "present on this computer. These keys may be usable, if the private key still exists:\n";
             for(const auto& key: nopriv) {
@@ -224,7 +240,6 @@ namespace bakermaker {
         }
 
         if(!nopub.empty()) {
-            success = 1;
             status += "The following users were not registered with the server, but did have private keys present on"
                       " this computer. Public keys were created and will be uploaded on the next save:\n";
             for(const auto& key: nopub) {
@@ -235,7 +250,74 @@ namespace bakermaker {
         execDone = true;
     }
 
-    void SyncToServer::syncTo() {}
+    void SyncToServer::syncTo() {
+        using namespace ST::literals;
+
+        ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::SYNC_TO_SERVER])->save();
+
+
+        ssh_session sess;
+        memset((void*) &sess, 0, sizeof(ssh_session));
+
+
+        int rc = bakermaker::createSession(sess, config["server"]["ip"].get<std::string>().c_str(),
+                                           config["server"]["user"].get<std::string>().c_str(),
+                                           config["server"]["keyfile"].get<std::string>().c_str(),
+                                           config["server"]["port"].get<int>());
+
+        if(rc != SSH_OK) {
+            statusmutex.lock();
+            status = "Failed to create ssh session";
+            statusmutex.unlock();
+            success = -1;
+            execDone = true;
+            return;
+        }
+
+        sftp_session sftp = sftp_new(sess);
+        sftp_init(sftp);
+
+        bakermaker::runCommand(sess, "rm gitolite-admin/keydir/*.pub");
+
+        for(const auto& file: std::filesystem::directory_iterator("keys")) {
+            ST::string path = file.path().string().c_str();
+            if(!path.ends_with(".pub")) continue;
+            statusmutex.lock();
+            status = "Saving changes to server: Uploading "_st + path;
+            statusmutex.unlock();
+            if(0 != bakermaker::uploadToRemote(sftp, path.c_str(),
+                                               ("gitolite-admin/keydir/"_st +
+                                                path.substr(5)).c_str())) {
+                success = -2;
+                sftp_free(sftp);
+                ssh_disconnect(sess);
+                ssh_free(sess);
+                execDone = true;
+                return;
+            }
+        }
+
+        statusmutex.lock();
+        status = "Saving changes to server: Uploading gitolite.conf";
+        statusmutex.unlock();
+
+        if(0 !=
+           bakermaker::uploadToRemote(sftp, "gitolite.conf", "gitolite-admin/conf/gitolite.conf")) {
+            success = -3;
+        }
+
+        statusmutex.lock();
+        status = "Committing changes";
+        statusmutex.unlock();
+        bakermaker::runCommand(sess, "~/commitall.sh");
+
+        sftp_free(sftp);
+        ssh_disconnect(sess);
+        ssh_free(sess);
+
+        status.clear();
+        execDone = true;
+    }
 
     void SyncToServer::setStatus(int rc) {
         statusmutex.lock();
@@ -254,6 +336,10 @@ namespace bakermaker {
 
             case -4:
                 status = "Failed to write to local file";
+                break;
+
+            default:
+                status = "";
                 break;
         }
 

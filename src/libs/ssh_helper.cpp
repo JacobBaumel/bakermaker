@@ -164,4 +164,18 @@ namespace bakermaker {
         sftp_close(file);
         return 0;
     }
+
+    int runCommand(ssh_session session, const char* command) {
+        ssh_channel ch = ssh_channel_new(session);
+        if(ch == nullptr) return -1;
+        ssh_channel_open_session(ch);
+        ssh_channel_request_exec(ch, command);
+
+        int rc = ssh_channel_get_exit_status(ch);
+        ssh_channel_send_eof(ch);
+        ssh_channel_close(ch);
+        ssh_channel_free(ch);
+
+        return rc;
+    }
 }

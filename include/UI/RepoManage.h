@@ -52,6 +52,7 @@ namespace bakermaker {
         void fetchRepoData(std::atomic_bool* execDone_, std::atomic_int* success_);
         void writeRepoData(std::atomic_bool* execDone_, std::atomic_int* success_);
         void reset();
+        void save();
 
     public:
         RepoManage();

@@ -193,4 +193,8 @@ namespace bakermaker {
     void RepoManage::reset() {
 
     }
+
+    void RepoManage::save() {
+
+    }
 }
