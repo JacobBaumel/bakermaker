@@ -42,6 +42,15 @@ namespace bakermaker {
             ImGui::BeginDisabled();
         }
 
+        if(config["unsaved"].get<bool>()) {
+            ImGui::NewLine();
+            ImGui::PushFont(fontlist[2]);
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
+            ImGui::Text("WARNING: You have unsaved changes. Either save changes to server, or reset by syncing.");
+            ImGui::PopStyleColor();
+            ImGui::PopFont();
+        }
+
         if(exec && !execDone) {
             ImGui::EndDisabled();
             statusmutex.lock();
@@ -69,7 +78,10 @@ namespace bakermaker {
                              "\n\n" + status).c_str());
                 }
 
-                else config["synced"] = true;
+                else {
+                    config["synced"] = true;
+                    config["unsaved"] = false;
+                }
             }
 
             else if(success == 0) {
@@ -83,7 +95,14 @@ namespace bakermaker {
 
     void SyncToServer::syncFrom() {
         for(const auto& file: std::filesystem::directory_iterator("keys")) {
-            if(file.path().string().ends_with(".pub")) std::filesystem::remove(file);
+            if(file.path().string().ends_with(".pub")) {
+                try {
+                    std::filesystem::remove(file);
+                } catch(const std::filesystem::filesystem_error& e) {
+                    std::cout << e.path1() << '\n' << e.path2() << '\n' << e.what() << '\n' << e.code() << std::endl;
+                    return;
+                }
+            }
         }
 
         ssh_session sess;
