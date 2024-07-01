@@ -94,17 +94,6 @@ namespace bakermaker {
     }
 
     void SyncToServer::syncFrom() {
-        for(const auto& file: std::filesystem::directory_iterator("keys")) {
-            if(file.path().string().ends_with(".pub")) {
-                try {
-                    std::filesystem::remove(file);
-                } catch(const std::filesystem::filesystem_error& e) {
-                    std::cout << e.path1() << '\n' << e.path2() << '\n' << e.what() << '\n' << e.code() << std::endl;
-                    return;
-                }
-            }
-        }
-
         ssh_session sess;
         memset((void*) &sess, 0, sizeof(ssh_session));
         {

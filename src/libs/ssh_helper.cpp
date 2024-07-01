@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <fstream>
 
 namespace bakermaker {
     int createSession(ssh_session& session, const char* ip, const char* user, const char* keyfile, int port) {
@@ -132,35 +133,34 @@ namespace bakermaker {
 
         if(file == nullptr) return -1;
 
-        FILE* localfile;
-        fopen_s(&localfile, localpath, "w");
-
-        if(localfile == nullptr) return -2;
+        std::fstream localfile(localpath);
 
         while(true) {
             char* buf = new char[block_size];
             ssize_t nbytes = sftp_read(file, buf, block_size);
             if(nbytes == 0) break;
             else if(nbytes < 0) {
-                fclose(localfile);
+                localfile.close();
                 sftp_close(file);
                 delete[] buf;
                 return -3;
             }
 
-            size_t nwritten = fwrite(buf, 1, nbytes, localfile);
-
-            if(nwritten != nbytes) {
-                fclose(localfile);
-                sftp_close(file);
-                delete[] buf;
-                return -4;
-            }
+            localfile << buf;
+//
+//            size_t nwritten = fwrite(buf, 1, nbytes, localfile);
+//
+//            if(nwritten != nbytes) {
+//                localfile.close();
+//                sftp_close(file);
+//                delete[] buf;
+//                return -4;
+//            }
 
             delete[] buf;
         }
 
-        fclose(localfile);
+        localfile.close();
         sftp_close(file);
         return 0;
     }
