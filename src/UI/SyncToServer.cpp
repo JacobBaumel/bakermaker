@@ -158,7 +158,7 @@ namespace bakermaker {
 
         std::set<ST::string> files;
         for(const auto& file: std::filesystem::directory_iterator("keys"))
-            files.insert(file.path().string().c_str());
+            files.insert(file.path().string().substr(5).c_str());
 
         std::set<ST::string> nopriv;
         std::set<ST::string> nopub;

@@ -133,7 +133,7 @@ namespace bakermaker {
 
         if(file == nullptr) return -1;
 
-        std::fstream localfile(localpath);
+        std::ofstream localfile(localpath, std::ofstream::binary);
 
         while(true) {
             char* buf = new char[block_size];

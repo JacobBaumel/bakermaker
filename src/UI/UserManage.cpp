@@ -102,7 +102,7 @@ namespace bakermaker {
             for(int i = 1; i < config["keys"].size(); i++) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted(config["keys"][i].get<ST::string>().substr(5).c_str());
+                ImGui::TextUnformatted(config["keys"][i].get<ST::string>().c_str());
                 ImGui::TableNextColumn();
                 if(ImGui::Button((ST::string("Delete##") + std::to_string(i)).c_str())) {
                     std::filesystem::remove(config["keys"][i].get<ST::string>().c_str());
