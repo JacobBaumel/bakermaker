@@ -168,6 +168,7 @@ namespace bakermaker {
             else {
                 for(const ST::string& str: line.after_first('=').trim().split(' ')) {
                     if(str.empty()) break;
+                    if(str == "admin") continue;
                     repos[currentRepo].insert(RepoUser(str, true));
                 }
 
@@ -191,7 +192,7 @@ namespace bakermaker {
         conf << "repo gitolite-admin\n\tRW+\t= admin\n\n";
 
         for(const auto& pair: repos) {
-            ST::string admins, users;
+            ST::string admins = "admin "_st, users;
             for(const auto& ru: pair.second) {
                 if(ru.isAdmin) admins += ru.name + " "_st;
                 else users += ru.name + " "_st;
