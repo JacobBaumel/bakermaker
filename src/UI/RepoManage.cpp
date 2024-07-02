@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include <chrono>
 #include <fstream>
+#include <iostream>
 #include "string_theory/iostream"
 #include "string_theory/stdio"
 #include "utils.h"
@@ -185,7 +186,50 @@ namespace bakermaker {
 //    }
 
     void RepoManage::reset() {
+        using namespace ST::literals;
+        std::ifstream conf("gitolite.conf");
 
+        if(!conf.is_open()) {
+            bakermaker::startErrorModal("Error reading config file. Try again.");
+            config["synced"] = false;
+            return;
+        }
+
+        ST::string currentRepo;
+
+        while(!conf.eof()) {
+            ST::string line = getLine(conf);
+
+            if(currentRepo.empty()) {
+                if(!line.starts_with("repo ")) continue;
+                currentRepo = line.substr(5);
+                if(currentRepo == "gitolite-admin"_st) {
+                    getLine(conf);
+                    currentRepo.clear();
+                    continue;
+                }
+
+                reponames.insert(currentRepo);
+                repos[currentRepo] = std::set<RepoUser, RepoUserSort>();
+            }
+
+            else {
+                for(const ST::string& str : line.after_first('=').trim().split(' ')) {
+                    repos[currentRepo].insert(RepoUser(str, true));
+                }
+
+                line = getLine(conf);
+
+                for(const ST::string& str : line.after_first('=').trim().split(' ')) {
+                    repos[currentRepo].insert(RepoUser(str, false));
+                }
+
+                getLine(conf);
+                getLine(conf);
+
+                currentRepo.clear();
+            }
+        }
     }
 
     void RepoManage::save() {
