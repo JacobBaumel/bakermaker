@@ -18,6 +18,7 @@
 #include "UI/SyncToServer.h"
 #include "UI/UserManage.h"
 #include "UI/RepoManage.h"
+#include "UI/ClientExtract.h"
 
 namespace bakermaker {
     bakermaker::ImguiMarkdownRender* documentation;
@@ -68,6 +69,7 @@ namespace bakermaker {
         else {
             config = {
                     {"synced", false},
+                    {"extracting", false},
                     {"unsaved", false},
                     {"setup", false},
                     {"iscsi", {"", "", ""}},
@@ -88,6 +90,7 @@ namespace bakermaker {
         new bakermaker::SyncToServer();
         new bakermaker::UserManage();
         new bakermaker::RepoManage();
+        new bakermaker::ClientExtract();
     }
 
     void prerender() {

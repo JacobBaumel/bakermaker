@@ -15,7 +15,7 @@ namespace bakermaker {
     void UserManage::render() {
         using namespace ST::literals;
 
-        if(!config["synced"].get<bool>()) ImGui::BeginDisabled();
+        if(!config["synced"].get<bool>() || config["extracting"].get<bool>()) ImGui::BeginDisabled();
 
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Manage Users");
@@ -122,6 +122,6 @@ namespace bakermaker {
             ImGui::EndTable();
         }
 
-        if(!config["synced"].get<bool>()) ImGui::EndDisabled();
+        if(!config["synced"].get<bool>() || config["extracting"].get<bool>()) ImGui::EndDisabled();
     }
 }

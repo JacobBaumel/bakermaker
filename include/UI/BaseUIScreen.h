@@ -22,6 +22,7 @@ namespace bakermaker {
         SYNC_TO_SERVER,
         USER_MANAGE,
         REPO_MANAGE,
+        CLIENT_EXTRACT,
 
         LIBS_NOT_FOUND
     };
