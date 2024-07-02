@@ -42,7 +42,6 @@ namespace bakermaker {
             }
             else {
                 exec = new std::thread(&bakermaker::createUser, newName, &execDone, &success);
-                memset((void*) newName, 0, USERLENGTH);
                 if(enter) ImGui::SetKeyboardFocusHere(-1);
                 ImGui::BeginDisabled();
             }
@@ -63,6 +62,7 @@ namespace bakermaker {
                 switch(success) {
                     case 0:
                         config["keys"].push_back(newName);
+                        memset((void*) newName, 0, USERLENGTH);
                         config["unsaved"] = true;
                         break;
 
