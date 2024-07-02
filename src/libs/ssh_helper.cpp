@@ -146,7 +146,7 @@ namespace bakermaker {
                 return -3;
             }
 
-            localfile << buf;
+            localfile.write(buf, nbytes);
 //
 //            size_t nwritten = fwrite(buf, 1, nbytes, localfile);
 //

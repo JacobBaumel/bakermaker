@@ -13,6 +13,8 @@ namespace bakermaker {
     }
 
     void UserManage::render() {
+        using namespace ST::literals;
+
         if(!config["synced"].get<bool>()) ImGui::BeginDisabled();
 
         ImGui::PushFont(fontlist[1]);
@@ -105,8 +107,8 @@ namespace bakermaker {
                 ImGui::TextUnformatted(config["keys"][i].get<ST::string>().c_str());
                 ImGui::TableNextColumn();
                 if(ImGui::Button((ST::string("Delete##") + std::to_string(i)).c_str())) {
-                    std::filesystem::remove(config["keys"][i].get<ST::string>().c_str());
-                    std::filesystem::remove((config["keys"][i].get<ST::string>() + ".pub").c_str());
+                    std::filesystem::remove(("keys/"_st + config["keys"][i].get<ST::string>()).c_str());
+                    std::filesystem::remove(("keys/"_st + config["keys"][i].get<ST::string>() + ".pub"_st).c_str());
                     config["keys"].erase(i);
                     config["unsaved"] = true;
                 }
