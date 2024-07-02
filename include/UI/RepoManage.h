@@ -3,12 +3,10 @@
 
 #include "UI/BaseUIScreen.h"
 #include "UI/SyncToServer.h"
-#include <thread>
-#include <atomic>
+#include "utils.h"
 #include "string_theory/string"
-#include <vector>
+#include <set>
 #include <map>
-#include <mutex>
 
 namespace bakermaker {
     using namespace ST::literals;
@@ -17,40 +15,29 @@ namespace bakermaker {
         friend class SyncToServer;
 
     private:
-        static constexpr int NEW_REPO_NAME_LENGTH = 64;
-
-        const ST::string REPO_LINE   = "repo "_st;
-        const ST::string RWP_LINE    = "    RW+      = @u"_st;
-        const ST::string MASTER_LINE = "    - master = @u"_st;
-        const ST::string RW_LINE     = "    RW       = @u"_st;
-
-        struct RepoString {
-            ST::string header;
-            ST::string rwp;
-            ST::string master;
-            ST::string rw;
-        };
-
         struct RepoUser {
             ST::string name;
-            bool isAdmin;
+            mutable bool isAdmin;
+
+            bool operator== (const RepoUser& other) const {
+                return name == other.name;
+            }
         };
 
-        std::thread* exec;
-        std::atomic_bool execDone;
-        std::atomic_int success;
-        std::map<ST::string, RepoString> repos;
-        std::vector<ST::string> reponames;
-        std::map<ST::string, std::vector<RepoUser>> ugroups;
-        std::mutex vectormutex;
+        struct RepoUserSort {
+            bool operator() (const RepoUser& lhs, const RepoUser& rhs) const {
+                return lhs.name < rhs.name;
+            }
+        };
 
-        char newrepo[NEW_REPO_NAME_LENGTH]{'\0'};
+        std::map<ST::string, std::set<RepoUser, RepoUserSort>> repos;
+        std::set<ST::string> reponames;
 
-        size_t selectedRepo;
+        char newrepo[USERLENGTH] = {'\0'};
+
+        ST::string selectedRepo;
         size_t selectedName;
 
-        void fetchRepoData(std::atomic_bool* execDone_, std::atomic_int* success_);
-        void writeRepoData(std::atomic_bool* execDone_, std::atomic_int* success_);
         void reset();
         void save();
 
