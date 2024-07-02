@@ -9,6 +9,7 @@
 #include "romfs/romfs.hpp"
 #include <fstream>
 #include "nlohmann/json.hpp"
+#include "stb_image.h"
 
 #include "UI/BaseUIScreen.h"
 #include "UI/ServerSetup.h"
@@ -29,6 +30,20 @@ namespace bakermaker {
     void init(GLFWwindow* window) {
         glfwMakeContextCurrent(window);
         glfwSwapInterval(1);
+        glfwSetWindowTitle(window, "Gitolite Server Setup");
+
+        {
+            int imagew = 0;
+            int imageh = 0;
+            romfs::Resource im = romfs::get("icon.png");
+            GLFWimage images[1];
+            images[0].pixels = stbi_load_from_memory((unsigned char*) im.data(), im.size(),
+                                                     &imagew, &imageh, nullptr, 4);
+            images[0].height = imageh;
+            images[0].width = imagew;
+            glfwSetWindowIcon(window, 1, images);
+            stbi_image_free(images[0].pixels);
+        }
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();

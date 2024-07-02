@@ -36,6 +36,7 @@ add_executable(bakermaker src/main.cpp libs/imgui/imgui.cpp libs/imgui/imgui_dra
         src/UI/SyncToServer.cpp
         src/libs/STStringJson.cpp
         src/UI/ClientExtract.cpp
+        windowsrc/icon.rc
 )
 
 set(string_theory_FOUND 1)
@@ -51,4 +52,4 @@ target_include_directories(bakermaker PUBLIC libs/glfw/include libs/imgui
 
 target_link_options(bakermaker PRIVATE "/DELAYLOAD:$<TARGET_FILE_BASE_NAME:ssh>.dll")
 
-# "/DELAYLOAD:$<TARGET_FILE_BASE_NAME:OpenSSL>.dll"
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gitolitesetup")

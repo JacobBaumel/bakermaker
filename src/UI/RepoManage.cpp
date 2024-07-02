@@ -139,6 +139,9 @@ namespace bakermaker {
 
     void RepoManage::reset() {
         using namespace ST::literals;
+        if(!std::filesystem::exists("gitolite.conf") ||
+           std::filesystem::is_directory("gitolite.conf")) return;
+
         std::ifstream conf("gitolite.conf");
 
         if(!conf.is_open()) {
