@@ -1,8 +1,6 @@
 #include "UI/RepoManage.h"
 #include "imgui.h"
-#include <chrono>
 #include <fstream>
-#include <iostream>
 #include "string_theory/iostream"
 #include "string_theory/stdio"
 #include "utils.h"
@@ -10,14 +8,14 @@
 namespace bakermaker {
     ST::string getLine(std::ifstream& stream) {
         std::string line;
-        std::getline(stream, line);
-        return ST::string(line);
+        std::getline(stream, line, '\n');
+        return ST::string{line};
     }
 
     RepoManage::RepoManage()
             :
             BaseUIScreen(bakermaker::ProgramStage::REPO_MANAGE, &bakermaker::configScreens),
-            repos(), reponames(), selectedRepo("") {
+            repos(), reponames(), selectedRepo(""), selectedName(1) {
         reset();
     }
 
@@ -30,11 +28,14 @@ namespace bakermaker {
         ImGui::PopFont();
         ImGui::Separator();
 
+        if(ImGui::Button("save")) save();
+
         ImGui::Text("Enter New Repository Name: ");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(600);
         ImGui::InputText("##newrepo_name", newrepo, USERLENGTH);
         ImGui::SameLine();
+
         if(ImGui::Button("Create")) {
             if(reponames.contains(newrepo))
                 bakermaker::startErrorModal("Repository already exists!");
@@ -42,6 +43,8 @@ namespace bakermaker {
                 ST::string rname = newrepo;
                 reponames.insert(rname);
                 repos[rname] = std::set<RepoUser, RepoUserSort>();
+                selectedRepo = rname;
+                config["unsaved"] = true;
             }
         }
         ImGui::NewLine();
@@ -79,11 +82,13 @@ namespace bakermaker {
                     ImGui::TextUnformatted(it->name.c_str());
 
                     ImGui::TableNextColumn();
-                    ImGui::Checkbox(("##isadmin"_st + it->name).c_str(), &it->isAdmin);
+                    if(ImGui::Checkbox(("##isadmin"_st + it->name).c_str(), &it->isAdmin)) config["unsaved"] = true;
 
                     ImGui::TableNextColumn();
-                    if(ImGui::Button(("Remove##"_st + it->name).c_str()))
+                    if(ImGui::Button(("Remove##"_st + it->name).c_str())) {
                         it = repos[selectedRepo].erase(it);
+                        config["unsaved"] = true;
+                    }
 
                     else it++;
                 }
@@ -130,61 +135,6 @@ namespace bakermaker {
         if(!config["synced"].get<bool>()) ImGui::EndDisabled();
     }
 
-//    void RepoManage::fetchRepoData(std::atomic_bool* execDone_, std::atomic_int* success_) {
-//        vectormutex.lock();
-//        using namespace std::chrono_literals;
-//        std::this_thread::sleep_for(2000ms);
-//
-//        std::ifstream repoconfig("gitolite.conf");
-//
-//        if(!repoconfig.is_open()) {
-//            *success_ = -1;
-//            *execDone_ = true;
-//        }
-//
-//        ugroups.clear();
-//        repos.clear();
-//
-//        while(!repoconfig.eof()) {
-//            ST::string line = getLine(repoconfig);
-//
-//            if(line.starts_with("@")) {
-//                ST::string groupName = line.before_first(' ').substr(2);
-//                std::vector<ST::string> users = line.after_first(' ').after_first(' ').split(' ');
-//                if(!ugroups.contains(groupName)) ugroups[groupName] = {};
-//                for(const auto& u: users)
-//                    ugroups[groupName].push_back({u, line[1] == 'a'});
-//            }
-//
-//            else if(line.starts_with("repo ")) {
-//                if(line.contains("gitolite-admin")) {
-//                    getLine(repoconfig);
-//                    continue;
-//                }
-//
-//                RepoString repo{};
-//                repo.header = line;
-//
-//                repo.rwp = getLine(repoconfig);
-//                repo.master = getLine(repoconfig);
-//                repo.rw = getLine(repoconfig);
-//
-//                ST::string name = repo.header.substr(5, repo.header.size() - 1);
-//                repos[name] = repo;
-//                reponames.push_back(name);
-//            }
-//        }
-//
-//        *execDone_ = true;
-//        *success_ = 0;
-//
-//        vectormutex.unlock();
-//    }
-//
-//    void RepoManage::writeRepoData(std::atomic_bool* execDone_, std::atomic_int* success_) {
-//
-//    }
-
     void RepoManage::reset() {
         using namespace ST::literals;
         std::ifstream conf("gitolite.conf");
@@ -199,6 +149,7 @@ namespace bakermaker {
 
         while(!conf.eof()) {
             ST::string line = getLine(conf);
+            if(line.empty()) continue;
 
             if(currentRepo.empty()) {
                 if(!line.starts_with("repo ")) continue;
@@ -209,18 +160,21 @@ namespace bakermaker {
                     continue;
                 }
 
+                if(selectedRepo.empty()) selectedRepo = currentRepo;
                 reponames.insert(currentRepo);
                 repos[currentRepo] = std::set<RepoUser, RepoUserSort>();
             }
 
             else {
-                for(const ST::string& str : line.after_first('=').trim().split(' ')) {
+                for(const ST::string& str: line.after_first('=').trim().split(' ')) {
+                    if(str.empty()) break;
                     repos[currentRepo].insert(RepoUser(str, true));
                 }
 
                 line = getLine(conf);
 
-                for(const ST::string& str : line.after_first('=').trim().split(' ')) {
+                for(const ST::string& str: line.after_first('=').trim().split(' ')) {
+                    if(str.empty()) break;
                     repos[currentRepo].insert(RepoUser(str, false));
                 }
 
@@ -233,6 +187,20 @@ namespace bakermaker {
     }
 
     void RepoManage::save() {
+        std::ofstream conf("gitolite.conf", std::ios::binary | std::ios::trunc);
+        conf << "repo gitolite-admin\n\tRW+\t= admin\n\n";
 
+        for(const auto& pair: repos) {
+            ST::string admins, users;
+            for(const auto& ru: pair.second) {
+                if(ru.isAdmin) admins += ru.name + " "_st;
+                else users += ru.name + " "_st;
+            }
+
+            conf << "repo " << pair.first << "\n\tRW+\t= " << admins << "\n\t- master\t= " << users
+                 << "\n\tRW\t= " << users << "\n\n";
+        }
+
+        conf.close();
     }
 }
