@@ -261,7 +261,7 @@ namespace bakermaker {
     void SyncToServer::syncTo() {
         using namespace ST::literals;
 
-        ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::SYNC_TO_SERVER])->save();
+        ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::REPO_MANAGE])->save();
 
 
         ssh_session sess;

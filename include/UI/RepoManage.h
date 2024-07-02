@@ -12,8 +12,6 @@ namespace bakermaker {
     using namespace ST::literals;
 
     class RepoManage : public BaseUIScreen {
-        friend class SyncToServer;
-
     private:
         struct RepoUser {
             ST::string name;
@@ -38,12 +36,12 @@ namespace bakermaker {
         ST::string selectedRepo;
         size_t selectedName;
 
-        void reset();
-        void save();
 
     public:
         RepoManage();
         void render() override;
+        void reset();
+        void save();
     };
 }
 
