@@ -27,10 +27,11 @@ namespace bakermaker {
         ImGui::Text("Enter New User: ");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(600);
-        ImGui::InputText("##newuser_enter", newName, USERLENGTH);
+        bool enter = ImGui::InputText("##newuser_enter", newName, USERLENGTH,
+                                      ImGuiInputTextFlags_EnterReturnsTrue);
         ImGui::SameLine();
 
-        if(ImGui::Button("Add")) {
+        if(enter || ImGui::Button("Add")) {
             execDone = false;
 
             std::set<std::string> users = config["keys"].get<std::set<std::string>>();
@@ -41,6 +42,8 @@ namespace bakermaker {
             }
             else {
                 exec = new std::thread(&bakermaker::createUser, newName, &execDone, &success);
+                memset((void*) newName, 0, USERLENGTH);
+                if(enter) ImGui::SetKeyboardFocusHere(-1);
                 ImGui::BeginDisabled();
             }
         }
@@ -107,8 +110,10 @@ namespace bakermaker {
                 ImGui::TextUnformatted(config["keys"][i].get<ST::string>().c_str());
                 ImGui::TableNextColumn();
                 if(ImGui::Button((ST::string("Delete##") + std::to_string(i)).c_str())) {
-                    std::filesystem::remove(("keys/"_st + config["keys"][i].get<ST::string>()).c_str());
-                    std::filesystem::remove(("keys/"_st + config["keys"][i].get<ST::string>() + ".pub"_st).c_str());
+                    std::filesystem::remove(
+                            ("keys/"_st + config["keys"][i].get<ST::string>()).c_str());
+                    std::filesystem::remove(
+                            ("keys/"_st + config["keys"][i].get<ST::string>() + ".pub"_st).c_str());
                     config["keys"].erase(i);
                     config["unsaved"] = true;
                 }

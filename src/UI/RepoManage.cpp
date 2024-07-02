@@ -28,15 +28,14 @@ namespace bakermaker {
         ImGui::PopFont();
         ImGui::Separator();
 
-        if(ImGui::Button("save")) save();
-
         ImGui::Text("Enter New Repository Name: ");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(600);
-        ImGui::InputText("##newrepo_name", newrepo, USERLENGTH);
+        bool enter = ImGui::InputText("##newrepo_name", newrepo, USERLENGTH,
+                                      ImGuiInputTextFlags_EnterReturnsTrue);
         ImGui::SameLine();
 
-        if(ImGui::Button("Create")) {
+        if(enter || ImGui::Button("Create")) {
             if(reponames.contains(newrepo))
                 bakermaker::startErrorModal("Repository already exists!");
             else {
@@ -44,6 +43,8 @@ namespace bakermaker {
                 reponames.insert(rname);
                 repos[rname] = std::set<RepoUser, RepoUserSort>();
                 selectedRepo = rname;
+                memset((void*) newrepo, 0, USERLENGTH);
+                if(enter) ImGui::SetKeyboardFocusHere(-1);
                 config["unsaved"] = true;
             }
         }
@@ -82,7 +83,8 @@ namespace bakermaker {
                     ImGui::TextUnformatted(it->name.c_str());
 
                     ImGui::TableNextColumn();
-                    if(ImGui::Checkbox(("##isadmin"_st + it->name).c_str(), &it->isAdmin)) config["unsaved"] = true;
+                    if(ImGui::Checkbox(("##isadmin"_st + it->name).c_str(), &it->isAdmin))
+                        config["unsaved"] = true;
 
                     ImGui::TableNextColumn();
                     if(ImGui::Button(("Remove##"_st + it->name).c_str())) {
