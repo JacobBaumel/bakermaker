@@ -1,13 +1,14 @@
 #include "UI/UserManage.h"
+#include "UI/RepoManage.h"
 #include <filesystem>
 #include "utils.h"
+#include "ssh_helper.h"
 #include <set>
 #include <iostream>
 
 namespace bakermaker {
     UserManage::UserManage() : BaseUIScreen(bakermaker::ProgramStage::USER_MANAGE,
-                                            &bakermaker::configScreens), exec(nullptr),
-                               execDone(false), success(0) {
+                                            &bakermaker::configScreens) {
         if(!std::filesystem::exists("keys") && !std::filesystem::is_directory("keys"))
             std::filesystem::create_directories("keys");
     }
@@ -15,14 +16,13 @@ namespace bakermaker {
     void UserManage::render() {
         using namespace ST::literals;
 
-        if(!config["synced"].get<bool>() || config["extracting"].get<bool>()) ImGui::BeginDisabled();
+        if(!config["synced"].get<bool>() || config["extracting"].get<bool>())
+            ImGui::BeginDisabled();
 
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Manage Users");
         ImGui::PopFont();
         ImGui::Separator();
-
-        if(exec && !execDone) ImGui::BeginDisabled();
 
         ImGui::Text("Enter New User: ");
         ImGui::SameLine();
@@ -32,8 +32,6 @@ namespace bakermaker {
         ImGui::SameLine();
 
         if(enter || ImGui::Button("Add")) {
-            execDone = false;
-
             std::set<std::string> users = config["keys"].get<std::set<std::string>>();
 
             if(users.contains(std::string(newName))) {
@@ -41,25 +39,7 @@ namespace bakermaker {
                         (ST::string("User \"") + newName + "\" has already been added.").c_str());
             }
             else {
-                exec = new std::thread(&bakermaker::createUser, newName, &execDone, &success);
-                if(enter) ImGui::SetKeyboardFocusHere(-1);
-                ImGui::BeginDisabled();
-            }
-        }
-
-        if(exec && !execDone) {
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            if(!execDone) bakermaker::spinner();
-        }
-
-        if(execDone) {
-            if(exec) {
-                exec->join();
-                delete exec;
-                exec = nullptr;
-
-                switch(success) {
+                switch(-genSSHKeyToFile(("keys/"_st + newName).c_str())) {
                     case 0:
                         config["keys"].push_back(newName);
                         memset((void*) newName, 0, USERLENGTH);
@@ -82,12 +62,7 @@ namespace bakermaker {
                         bakermaker::startErrorModal("Failed to export public key to file!");
                         break;
                 }
-            }
-
-            if(success == 0) {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
-                ImGui::Text("Success!");
-                ImGui::PopStyleColor();
+                if(enter) ImGui::SetKeyboardFocusHere(-1);
             }
         }
 
@@ -110,10 +85,11 @@ namespace bakermaker {
                 ImGui::TextUnformatted(config["keys"][i].get<ST::string>().c_str());
                 ImGui::TableNextColumn();
                 if(ImGui::Button((ST::string("Delete##") + std::to_string(i)).c_str())) {
-                    std::filesystem::remove(
-                            ("keys/"_st + config["keys"][i].get<ST::string>()).c_str());
-                    std::filesystem::remove(
-                            ("keys/"_st + config["keys"][i].get<ST::string>() + ".pub"_st).c_str());
+                    ST::string user = config["keys"][i].get<ST::string>();
+                    std::filesystem::remove(("keys/"_st + user + ".pub"_st).c_str());
+                    std::filesystem::remove(("keys/"_st + user).c_str());
+                    ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::REPO_MANAGE])->deleteUser(
+                            user);
                     config["keys"].erase(i);
                     config["unsaved"] = true;
                 }

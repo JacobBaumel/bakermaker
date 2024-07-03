@@ -42,6 +42,7 @@ namespace bakermaker {
         void render() override;
         void reset();
         void save();
+        void deleteUser(const ST::string& user);
     };
 }
 

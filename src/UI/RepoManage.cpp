@@ -209,4 +209,12 @@ namespace bakermaker {
 
         conf.close();
     }
+
+    void RepoManage::deleteUser(const ST::string& user) {
+        for(auto& repo : repos) {
+            std::erase_if(repo.second, [&user](const RepoUser& r) {return r.name == user;});
+        }
+
+        if(config["keys"][selectedName].get<ST::string>() == user) selectedName = 1;
+    }
 }

@@ -11,12 +11,6 @@ namespace bakermaker {
     private:
         char newName[USERLENGTH] = {'\0'};
 
-        std::thread* exec;
-        std::atomic_bool execDone;
-        std::atomic_int success;
-
-
-
     public:
         UserManage();
         void render() override;
