@@ -34,19 +34,15 @@ namespace bakermaker {
         ImGui::SameLine();
 
         if(ImGui::Button("Save changes to server")) {
-            execDone = false;
-            success = 0;
-            status = "Saving to server";
-            config["synced"] = false;
-            exec = new std::thread(&SyncToServer::syncTo, this);
-            ImGui::BeginDisabled();
+            startSync("");
         }
 
         if(config["unsaved"].get<bool>()) {
             ImGui::NewLine();
             ImGui::PushFont(fontlist[2]);
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
-            ImGui::Text("WARNING: You have unsaved changes. Either save changes to server, or reset by syncing.");
+            ImGui::Text(
+                    "WARNING: You have unsaved changes. Either save changes to server, or reset by syncing.");
             ImGui::PopStyleColor();
             ImGui::PopFont();
         }
@@ -258,7 +254,7 @@ namespace bakermaker {
         execDone = true;
     }
 
-    void SyncToServer::syncTo() {
+    void SyncToServer::syncTo(const ST::string& deleterepo) {
         using namespace ST::literals;
 
         ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::REPO_MANAGE])->save();
@@ -319,12 +315,27 @@ namespace bakermaker {
         statusmutex.unlock();
         bakermaker::runCommand(sess, "~/commitall.sh");
 
+        if(!deleterepo.empty() && 0 != bakermaker::runCommand(sess,
+                                                              ("sudo rm -rf /home/git/repositories/"_st +
+                                                               deleterepo + ".git"_st).c_str()))
+            success = -4;
+
         sftp_free(sftp);
         ssh_disconnect(sess);
         ssh_free(sess);
 
         status.clear();
         execDone = true;
+    }
+
+    void SyncToServer::startSync(const ST::string& deleterepo) {
+        if(exec) return;
+        execDone = false;
+        success = 0;
+        status = "Saving to server";
+        config["synced"] = false;
+        exec = new std::thread(&SyncToServer::syncTo, this, "");
+        ImGui::BeginDisabled();
     }
 
     void SyncToServer::setStatus(int rc) {
@@ -353,5 +364,4 @@ namespace bakermaker {
 
         statusmutex.unlock();
     }
-
 }
