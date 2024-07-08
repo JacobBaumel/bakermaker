@@ -22,7 +22,7 @@ namespace bakermaker {
 
         void setStatus(int rc);
         void syncFrom();
-        void syncTo(const ST::string& deleterepo);
+        void syncTo(ST::string deleterepo);
 
     public:
         SyncToServer();

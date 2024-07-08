@@ -1,4 +1,5 @@
 #include "UI/RepoManage.h"
+#include "UI/SyncToServer.h"
 #include "imgui.h"
 #include <fstream>
 #include "string_theory/iostream"
@@ -15,7 +16,7 @@ namespace bakermaker {
     RepoManage::RepoManage()
             :
             BaseUIScreen(bakermaker::ProgramStage::REPO_MANAGE, &bakermaker::configScreens),
-            repos(), reponames(), selectedRepo(""), selectedName(1) {
+            repos(), reponames(), selectedRepo(""), selectedName(1), showConfirm(false) {
         reset();
     }
 
@@ -133,14 +134,64 @@ namespace bakermaker {
             }
         }
 
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 0, 0, 1));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9, 0, 0, 1));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1, 0, 0, 1));
+        if(ImGui::Button("Delete Repository##repodelete")) showConfirm = true;
+        ImGui::PopStyleColor(3);
 
-        if(!config["synced"].get<bool>()) ImGui::EndDisabled();
+        bool confirmed = false;
+
+        if(showConfirm) {
+            ImVec2 size{525, 175};
+            ImGui::SetNextWindowSize(size);
+            ImGui::SetNextWindowFocus();
+            ImVec2 screenSize = ImGui::GetIO().DisplaySize;
+            screenSize.x = (screenSize.x - size.x) / 2;
+            screenSize.y = (screenSize.y - size.y) / 2;
+            ImGui::SetNextWindowPos(screenSize);
+            if(ImGui::Begin("Confirm Delete", nullptr,
+                            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration)) {
+                ImGui::Text("Confirm deleting repository \"%s\"", selectedRepo.c_str());
+                ImGui::PushFont(fontlist[3]);
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
+                ImGui::TextWrapped(
+                        "WARNING: This action is irreversible. All data belonging to %s will be deleted from the git server.",
+                        selectedRepo.c_str());
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
+                ImGui::TextWrapped(
+                        "Following a confirmation, the software will save changes to the server immediately.");
+
+                ImGui::NewLine();
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 0, 0, 1));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9, 0, 0, 1));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1, 0, 0, 1));
+                if(ImGui::Button("Confirm")) {
+                    showConfirm = false;
+                    repos.erase(selectedRepo);
+                    reponames.erase(selectedRepo);
+                    ((bakermaker::SyncToServer*) bakermaker::configScreens[bakermaker::ProgramStage::SYNC_TO_SERVER])->startSync(
+                            selectedRepo);
+                    selectedRepo.clear();
+                    confirmed = true;
+                }
+                ImGui::PopStyleColor(3);
+
+                ImGui::SameLine();
+                if(ImGui::Button("Cancel")) showConfirm = false;
+                ImGui::End();
+            }
+        }
+
+        if(!confirmed && !config["synced"].get<bool>()) ImGui::EndDisabled();
     }
 
     void RepoManage::reset() {
         using namespace ST::literals;
         if(!std::filesystem::exists("gitolite.conf") ||
-           std::filesystem::is_directory("gitolite.conf")) return;
+           std::filesystem::is_directory("gitolite.conf"))
+            return;
 
         std::ifstream conf("gitolite.conf");
 
@@ -211,8 +262,8 @@ namespace bakermaker {
     }
 
     void RepoManage::deleteUser(const ST::string& user) {
-        for(auto& repo : repos) {
-            std::erase_if(repo.second, [&user](const RepoUser& r) {return r.name == user;});
+        for(auto& repo: repos) {
+            std::erase_if(repo.second, [&user](const RepoUser& r) { return r.name == user; });
         }
 
         if(config["keys"][selectedName].get<ST::string>() == user) selectedName = 1;

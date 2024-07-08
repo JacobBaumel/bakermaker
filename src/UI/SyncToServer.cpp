@@ -35,6 +35,7 @@ namespace bakermaker {
 
         if(ImGui::Button("Save changes to server")) {
             startSync("");
+            ImGui::BeginDisabled();
         }
 
         if(config["unsaved"].get<bool>()) {
@@ -254,7 +255,7 @@ namespace bakermaker {
         execDone = true;
     }
 
-    void SyncToServer::syncTo(const ST::string& deleterepo) {
+    void SyncToServer::syncTo(const ST::string deleterepo) {
         using namespace ST::literals;
 
         ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::REPO_MANAGE])->save();
@@ -315,10 +316,15 @@ namespace bakermaker {
         statusmutex.unlock();
         bakermaker::runCommand(sess, "~/commitall.sh");
 
-        if(!deleterepo.empty() && 0 != bakermaker::runCommand(sess,
-                                                              ("sudo rm -rf /home/git/repositories/"_st +
-                                                               deleterepo + ".git"_st).c_str()))
-            success = -4;
+        if(!deleterepo.empty()) {
+            statusmutex.lock();
+            status = "Deleting repository "_st + deleterepo;
+            statusmutex.unlock();
+            int rc = bakermaker::runCommand(sess,
+                                            ("sudo rm -rf /home/git/repositories/"_st +
+                                             deleterepo + ".git"_st).c_str());
+            if(rc != 0) success = -4;
+        }
 
         sftp_free(sftp);
         ssh_disconnect(sess);
@@ -334,8 +340,7 @@ namespace bakermaker {
         success = 0;
         status = "Saving to server";
         config["synced"] = false;
-        exec = new std::thread(&SyncToServer::syncTo, this, "");
-        ImGui::BeginDisabled();
+        exec = new std::thread(&SyncToServer::syncTo, this, deleterepo);
     }
 
     void SyncToServer::setStatus(int rc) {

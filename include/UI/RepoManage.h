@@ -35,6 +35,7 @@ namespace bakermaker {
 
         ST::string selectedRepo;
         size_t selectedName;
+        bool showConfirm;
 
 
     public:
