@@ -40,6 +40,7 @@ case $(cat progress) in
     if [ $1 -eq 1 ]; then
       $4
       err $? "Connecting ISCSI drive (3/3)" "Failed to connect to ISCSI drive"
+      sleep 5
     fi
 
     prog 3
@@ -47,7 +48,7 @@ case $(cat progress) in
 
   3)
     if [ $1 -eq 1 ]; then
-      sudo mkfs -t ext4 /dev/sdb
+      sudo mkfs -t ext4 /dev/oracleoci/oraclevdb
       err $? "Formatting ISCSI drive" "Failed to format ISCSI drive"
     fi
 
@@ -56,8 +57,8 @@ case $(cat progress) in
 
   4)
     if [ $1 -eq 1 ]; then
-      uuid=$(sudo blkid /dev/sdb -o value | head -n 1)
-      echo -e '\n\nUUID=\"' $uuid '\"\t/mnt\text4\tdefaults,noatime,_netdev\t0 2' | sudo tee -a /etc/fstab
+      uuid=$(sudo blkid /dev/oracleoci/oraclevdb -o value | head -n 1)
+      printf '\n\nUUID="%s"\t/mnt\text4\tdefaults,noatime,_netdev\t0 2' ${uuid} | sudo tee -a /etc/fstab
       err $? "Adding ISCSI drive to /etc/fstab" "Failed to write to /etc/fstab"
     fi
 
