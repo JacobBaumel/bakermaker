@@ -258,9 +258,6 @@ namespace bakermaker {
     void SyncToServer::syncTo(const ST::string deleterepo) {
         using namespace ST::literals;
 
-        ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::REPO_MANAGE])->save();
-
-
         ssh_session sess;
         memset((void*) &sess, 0, sizeof(ssh_session));
 
@@ -340,6 +337,7 @@ namespace bakermaker {
         success = 0;
         status = "Saving to server";
         config["synced"] = false;
+        ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::REPO_MANAGE])->save();
         exec = new std::thread(&SyncToServer::syncTo, this, deleterepo);
     }
 
