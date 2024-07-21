@@ -37,7 +37,8 @@ namespace bakermaker {
         ImGui::SameLine();
 
         if(enter || ImGui::Button("Create")) {
-            if(reponames.contains(newrepo))
+            if(newrepo[0] == '\0') bakermaker::startErrorModal("Please enter a name!");
+            else if(reponames.contains(newrepo))
                 bakermaker::startErrorModal("Repository already exists!");
             else {
                 ST::string rname = newrepo;

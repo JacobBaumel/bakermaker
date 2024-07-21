@@ -32,9 +32,9 @@ namespace bakermaker {
         ImGui::SameLine();
 
         if(enter || ImGui::Button("Add")) {
-            std::set<std::string> users = config["keys"].get<std::set<std::string>>();
+            if(newName[0] == '\0') bakermaker::startErrorModal("Please enter a name!");
 
-            if(users.contains(std::string(newName))) {
+            if(config["keys"].get<std::set<std::string>>().contains(std::string(newName))) {
                 bakermaker::startErrorModal(
                         (ST::string("User \"") + newName + "\" has already been added.").c_str());
             }
