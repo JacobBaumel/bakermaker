@@ -160,7 +160,7 @@ namespace bakermaker {
 
     void ServerInstall::startNewCommand(const char* command) {
         curcmd.lock();
-        curcmdstr = command;
+        curcmdstr = "Installing";
         curcmd.unlock();
 
         bufferMutex.lock();
