@@ -131,7 +131,7 @@ case $(cat progress) in
     ;&
 
   12)
-    sudo cp /home/ubuntu/authorized_keys /home/git/.ssh/authorized_keys
+    sudo cp ~/authorized_keys /home/git/.ssh/authorized_keys
     err $? "Copied authorized_keys to git user" "Failed to copy authorized keys"
 
     prog 13
@@ -182,14 +182,14 @@ case $(cat progress) in
 
   19)
     mkdir -p .ssh
-    err $? "Creted ubuntu ssh directory" "Could not create ubuntu ssh directory"
+    err $? "Creted admin user ssh directory" "Could not create admin user ssh directory"
 
     prog 20
     ;&
 
   20)
     mkdir -p .ssh
-    err $? "Creted ubuntu ssh directory" "Could not create ubuntu ssh directory"
+    err $? "Creted admin user ssh directory" "Could not create admin user ssh directory"
 
     prog 21
     ;&
@@ -252,7 +252,7 @@ case $(cat progress) in
     ;&
 
   29)
-    /home/ubuntu/commitall.sh
+    ~/commitall.sh
     err $? "Committed changes" "Failed to commit changes"
 
     prog 30
