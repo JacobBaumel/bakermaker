@@ -34,9 +34,6 @@ int main() {
     const ImGuiTabBarFlags tabflags = ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip;
     const ImGuiTabItemFlags tabitemflags = ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | ImGuiTabItemFlags_NoReorder;
 
-    bool open = true, open1 = true, open2 = true;
-
-
     bool libsfound = true;
     bakermaker::LibsNotFound* lnf;
     {
@@ -54,7 +51,7 @@ int main() {
 
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->Size);
-        if(ImGui::Begin("Bakermaker", &open, flags)) {
+        if(ImGui::Begin("Bakermaker", nullptr, flags)) {
             if(!libsfound) {
                 lnf->render();
             }
@@ -63,7 +60,7 @@ int main() {
                 if(ImGui::BeginTabBar("##tabbar", tabflags)) {
                     bool setup = bakermaker::config["setup"].get<bool>();
                     if(ImGui::BeginTabItem((setup ? "Server Config" :
-                            "Server Management"), &open1, tabitemflags)) {
+                            "Server Management"), nullptr, tabitemflags)) {
                         for(auto& screen : (setup ? bakermaker::configScreens : bakermaker::setupScreens)) {
                             screen.second->render();
                             ImGui::NewLine();
@@ -72,7 +69,7 @@ int main() {
                         bakermaker::displayErrorModal();
                         ImGui::EndTabItem();
                     }
-                    if(ImGui::BeginTabItem("Documentation", &open2, tabitemflags)) {
+                    if(ImGui::BeginTabItem("Documentation", nullptr, tabitemflags)) {
                         ImGui::SetNextItemWidth(ImGui::GetIO().DisplaySize.x / 1.5);
                         bakermaker::documentation->render(bakermaker::documarkdown);
                         ImGui::EndTabItem();
