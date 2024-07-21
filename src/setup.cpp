@@ -20,6 +20,7 @@
 #include "UI/UserManage.h"
 #include "UI/RepoManage.h"
 #include "UI/ClientExtract.h"
+#include "UI/UsedStorage.h"
 
 namespace bakermaker {
     bakermaker::ImguiMarkdownRender* documentation;
@@ -106,6 +107,7 @@ namespace bakermaker {
         new bakermaker::UserManage();
         new bakermaker::RepoManage();
         new bakermaker::ClientExtract();
+        new bakermaker::UsedStorage();
     }
 
     void prerender() {

@@ -37,6 +37,7 @@ add_executable(bakermaker src/main.cpp libs/imgui/imgui.cpp libs/imgui/imgui_dra
         src/libs/STStringJson.cpp
         src/UI/ClientExtract.cpp
         windowsrc/icon.rc
+        src/UI/UsedStorage.cpp
 )
 
 set(string_theory_FOUND 1)

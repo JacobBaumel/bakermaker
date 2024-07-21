@@ -268,4 +268,8 @@ namespace bakermaker {
 
         if(config["keys"][selectedName].get<ST::string>() == user) selectedName = 1;
     }
+
+    const std::set<ST::string>& RepoManage::getRepoNames() {
+        return reponames;
+    }
 }
