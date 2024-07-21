@@ -37,6 +37,13 @@ namespace bakermaker {
 
         if(ImGui::Button("Submit##server_setup")) {
             config["iscsi"] = {c1, c2, c3};
+            submitted = true;
+        }
+
+        if(submitted) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+            ImGui::Text("Success!");
+            ImGui::PopStyleColor();
         }
 
         if(!useiscsi) ImGui::EndDisabled();

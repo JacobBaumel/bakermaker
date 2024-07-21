@@ -15,6 +15,7 @@ namespace bakermaker {
         char c2[150]{'\0'};
         char c3[150]{'\0'};
         bool useiscsi = true;
+        bool submitted = false;
 
     public:
         ServerSetup();
