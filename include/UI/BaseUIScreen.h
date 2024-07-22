@@ -24,6 +24,7 @@ namespace bakermaker {
         REPO_MANAGE,
         USED_STORAGE,
         CLIENT_EXTRACT,
+        DEBUG_EXPORT,
 
         LIBS_NOT_FOUND
     };

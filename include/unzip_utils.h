@@ -3,5 +3,6 @@
 
 namespace bakermaker {
     bool unzip_from_mem(void* data, size_t size);
+    bool zip_debug();
 }
 #endif //BAKERMAKER_UNZIP_UTILS_H
