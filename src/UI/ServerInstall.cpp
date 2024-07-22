@@ -46,7 +46,7 @@ namespace bakermaker {
                 InstallParams ip{config["server"]["ip"].get<std::string>(),
                                  config["server"]["port"].get<int>(),
                                  config["server"]["user"].get<std::string>(),
-                                 config["server"]["keyfile"].get<std::string>(),
+                                 "./keyfile",
                                  config["keys"][0].get<std::string>(),
                                  useiscsi,
                                  useiscsi ? '"' + config["iscsi"][0].get<std::string>() + "\" "

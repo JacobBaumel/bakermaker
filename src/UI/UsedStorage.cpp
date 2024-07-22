@@ -47,11 +47,11 @@ namespace bakermaker {
         if(ImGui::BeginTable("##repousagetable", 1,
                              ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(300, 0))) {
             ImGui::TableNextRow();
-            if(!hasRefreshed || exec) {
+            if(!hasRefreshed || exec || repousage.empty()) {
                 ImGui::TableNextColumn();
-                ImGui::Dummy(ImVec2(0, 25));
+                ImGui::Text("No repositories created yet!");
             }
-            else
+            else {
                 for(const auto& pair : repousage) {
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(pair.first.c_str());
@@ -63,6 +63,7 @@ namespace bakermaker {
                     ImGui::Text("%d%% (%ld / %ld bytes used)", static_cast<int>(percent * 100), pair.second,
                                 totalUsed.load());
                 }
+            }
 
             ImGui::EndTable();
         }
@@ -100,7 +101,7 @@ namespace bakermaker {
         int rc = createSession(sess,
                                config["server"]["ip"].get<std::string>().c_str(),
                                config["server"]["user"].get<std::string>().c_str(),
-                               config["server"]["keyfile"].get<std::string>().c_str(),
+                               "./keyfile",
                                config["server"]["port"].get<int>());
 
         if(rc != SSH_OK) {

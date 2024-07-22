@@ -93,8 +93,7 @@ namespace bakermaker {
                     {"server", {
                             {"ip", ""},
                             {"port", 22},
-                            {"user", "ubuntu"},
-                            {"keyfile", ""}}},
+                            {"user", "ubuntu"}}},
                     {"keys", nlohmann::json::array()}
             };
         }

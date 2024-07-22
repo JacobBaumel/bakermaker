@@ -58,7 +58,7 @@ namespace bakermaker {
         if(ImGui::Button("Submit##server_connect")) {
             sshrc = 1;
             execDone = false;
-            exec = new std::thread([this](){
+            exec = new std::thread([this]() {
                 ssh_session session;
                 ST::string path = browser->GetSelected().string();
                 sshrc = createSession(session, ip, user, path.c_str(), port);
@@ -83,31 +83,36 @@ namespace bakermaker {
                 delete exec;
                 exec = nullptr;
 
-                config["server"]["ip"] = ip;
-                config["server"]["port"] = port;
-                config["server"]["user"] = user;
-                config["server"]["keyfile"] = browser->GetSelected().string();
-
                 switch(sshrc) {
-                    case -1:
-                        bakermaker::startErrorModal("Could not initialize SSH Session. Application Error. (-1)");
-                        break;
+                case 0:
+                    config["server"]["ip"] = ip;
+                    config["server"]["port"] = port;
+                    config["server"]["user"] = user;
+                    std::filesystem::copy_file(browser->GetSelected().string(), "./keyfile");
+                    break;
 
-                    case -2:
-                        bakermaker::startErrorModal("Could not connect to SSH server (-2)");
-                        break;
+                case -1:
+                    bakermaker::startErrorModal("Could not initialize SSH Session. Application Error. (-1)");
+                    break;
 
-                    case -3:
-                        bakermaker::startErrorModal("Error processing public key (-3)");
-                        break;
+                case -2:
+                    bakermaker::startErrorModal("Could not connect to SSH server (-2)");
+                    break;
 
-                    case -4:
-                        bakermaker::startErrorModal("Error processing private key (-4)");
-                        break;
+                case -3:
+                    bakermaker::startErrorModal("Error processing public key (-3)");
+                    break;
 
-                    case -5:
-                        bakermaker::startErrorModal("Could not read private key file (-5)");
-                        break;
+                case -4:
+                    bakermaker::startErrorModal("Error processing private key (-4)");
+                    break;
+
+                case -5:
+                    bakermaker::startErrorModal("Could not read private key file (-5)");
+                    break;
+
+                default:
+                    bakermaker::startErrorModal("Unknown error code!");
                 }
             }
 

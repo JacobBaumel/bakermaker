@@ -97,7 +97,7 @@ namespace bakermaker {
             int rc = bakermaker::createSession(sess,
                                                config["server"]["ip"].get<std::string>().c_str(),
                                                config["server"]["user"].get<std::string>().c_str(),
-                                               config["server"]["keyfile"].get<std::string>().c_str(),
+                                               "./keyfile",
                                                config["server"]["port"].get<int>());
 
             if(rc != SSH_OK) {
@@ -264,7 +264,7 @@ namespace bakermaker {
 
         int rc = bakermaker::createSession(sess, config["server"]["ip"].get<std::string>().c_str(),
                                            config["server"]["user"].get<std::string>().c_str(),
-                                           config["server"]["keyfile"].get<std::string>().c_str(),
+                                           "./keyfile",
                                            config["server"]["port"].get<int>());
 
         if(rc != SSH_OK) {
