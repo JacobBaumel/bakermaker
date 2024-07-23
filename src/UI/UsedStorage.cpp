@@ -83,6 +83,7 @@ namespace bakermaker {
 
         if(exec && !execDone) {
             ImGui::EndDisabled();
+            ImGui::SameLine();
             bakermaker::spinner();
         }
 

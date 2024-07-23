@@ -9,6 +9,7 @@ namespace bakermaker {
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Create Debug Export");
         ImGui::PopFont();
+        ImGui::Separator();
         ImGui::Text("Create zip archive of all important data.");
         if(ImGui::Button("Create")) {
             zip_debug();

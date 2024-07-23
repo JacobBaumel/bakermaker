@@ -64,7 +64,7 @@ namespace bakermaker {
         static int spinnerid = 0;
         spinnerid = (spinnerid + 1) % 1000;
         ImGui::Spinner((ST::string("##spinner") + spinnerid).c_str(), 8, 1,
-                       ImGui::GetColorU32(ImVec4(0.1, 0.1, 0.75, 1)));
+                       ImGui::GetColorU32(ImVec4(0.9, 0.9, 0.9, 1)));
     }
 
     void createUser(const char* name, std::atomic_bool* execDone, std::atomic_int* success) {

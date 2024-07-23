@@ -118,24 +118,23 @@ namespace bakermaker {
             if(ImGui::Begin("Command Output")) {
                 ImGui::PushFont(fontlist[1]);
                 curcmd.lock();
-                ImGui::Text("Current Command: %s", curcmdstr.c_str());
+                ImGui::Text("%s", curcmdstr.c_str());
                 curcmd.unlock();
                 ImGui::PopFont();
 
                 ImGui::Separator();
 
-                if(ImGui::BeginChild("cmdout##serverinstall")) {
+                if(ImGui::BeginChild("cmdout##serverinstall", ImVec2(0, ImGui::GetWindowHeight() - 100))) {
                     bufferMutex.lock();
                     ImGui::TextUnformatted(commandProgress.c_str());
                     bufferMutex.unlock();
+                    ImGui::EndChild();
                 }
 
                 ImGui::Separator();
                 if(ImGui::Button("Close##command_screen")) {
                     showCommandOutputs = false;
                 }
-
-                ImGui::EndChild();
             }
 
             ImGui::End();

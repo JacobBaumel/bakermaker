@@ -88,6 +88,7 @@ namespace bakermaker {
                     config["server"]["ip"] = ip;
                     config["server"]["port"] = port;
                     config["server"]["user"] = user;
+                    if(std::filesystem::exists("./keyfile")) std::filesystem::remove("./keyfile");
                     std::filesystem::copy_file(browser->GetSelected().string(), "./keyfile");
                     break;
 
