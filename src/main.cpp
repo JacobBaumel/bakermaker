@@ -46,7 +46,6 @@ int main() {
     }
 
     while(!glfwWindowShouldClose(window)) {
-        bakermaker::resetIds();
         bakermaker::prerender();
 
         ImGui::SetNextWindowPos(ImVec2(0, 0));

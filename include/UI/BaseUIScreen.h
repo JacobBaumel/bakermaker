@@ -11,8 +11,6 @@
 
 namespace bakermaker {
     extern ImFont** fontlist;
-    extern int latestId;
-    void resetIds();
 
     enum class ProgramStage {
         SERVER_SETUP,
