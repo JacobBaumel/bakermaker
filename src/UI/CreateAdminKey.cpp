@@ -34,7 +34,7 @@ namespace bakermaker {
 
         // If button pushed, create the admin key file
         ImGui::Text("Create admin user: ");
-        if(ImGui::Button("Create Admin User")) {
+        if(config["keys"].empty() && ImGui::Button("Create Admin User")) {
             if(config["keys"].get<std::set<std::string>>().contains(std::string("admin"))) {
                 startErrorModal("User admin has already been added.");
             }
