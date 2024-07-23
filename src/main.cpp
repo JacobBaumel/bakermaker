@@ -61,17 +61,25 @@ int main() {
                     bool setup = bakermaker::config["setup"].get<bool>();
                     if(ImGui::BeginTabItem((setup ? "Server Config" :
                             "Server Management"), nullptr, tabitemflags)) {
-                        for(auto& screen : (setup ? bakermaker::configScreens : bakermaker::setupScreens)) {
-                            screen.second->render();
-                            ImGui::NewLine();
+                        if(ImGui::BeginChild("##workchild")) {
+                            for(auto& screen : (setup ? bakermaker::configScreens : bakermaker::setupScreens)) {
+                                screen.second->render();
+                                ImGui::NewLine();
+                            }
+
+                            bakermaker::displayErrorModal();
+                            ImGui::EndChild();
                         }
 
-                        bakermaker::displayErrorModal();
                         ImGui::EndTabItem();
                     }
                     if(ImGui::BeginTabItem("Documentation", nullptr, tabitemflags)) {
-                        ImGui::SetNextItemWidth(ImGui::GetIO().DisplaySize.x / 1.5);
-                        bakermaker::documentation->render(bakermaker::documarkdown);
+                        if(ImGui::BeginChild("##docchild")) {
+                            ImGui::Dummy(ImVec2(0, 15));
+                            ImGui::SetNextItemWidth(ImGui::GetIO().DisplaySize.x / 1.5);
+                            bakermaker::documentation->render(bakermaker::documarkdown);
+                            ImGui::EndChild();
+                        }
                         ImGui::EndTabItem();
                     }
 
