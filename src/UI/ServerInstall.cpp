@@ -1,4 +1,7 @@
 #include "UI/ServerInstall.h"
+
+#include <imgui_internal.h>
+
 #include "romfs/romfs.hpp"
 #include "utils.h"
 #include "libssh/libssh.h"
@@ -27,7 +30,8 @@ namespace bakermaker {
 
         ImGui::NewLine();
 
-        if(config["keys"].empty() || (exec && !execDone) || (execDone && success == 0))
+        if(config["keys"].empty() || config["server"]["ip"].get<ST::string>().empty() || (exec && !execDone) || (
+            execDone && success == 0))
             ImGui::BeginDisabled();
 
         if(ImGui::Button("Begin##server_install_begin")) {
@@ -60,9 +64,16 @@ namespace bakermaker {
         }
 
         if(config["keys"].empty()) {
-            ImGui::EndDisabled();
+            if(ImGui::GetCurrentContext()->DisabledStackSize > 0) ImGui::EndDisabled();
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
             ImGui::Text("Create admin key first!");
+            ImGui::PopStyleColor();
+        }
+
+        if(config["server"]["ip"].get<ST::string>().empty()) {
+            if(ImGui::GetCurrentContext()->DisabledStackSize > 0) ImGui::EndDisabled();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
+            ImGui::Text("Verify server connection info first!");
             ImGui::PopStyleColor();
         }
 
