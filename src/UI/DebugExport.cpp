@@ -1,4 +1,7 @@
 #include "UI/DebugExport.h"
+
+#include <utils.h>
+
 #include "unzip_utils.h"
 
 namespace bakermaker {
@@ -12,7 +15,7 @@ namespace bakermaker {
         ImGui::Separator();
         ImGui::Text("Create zip archive of all important data.");
         if(ImGui::Button("Create")) {
-            zip_debug();
+            if(!zip_debug()) bakermaker::startErrorModal("Failed to create debug export!");
         }
     }
 
