@@ -41,8 +41,8 @@ namespace bakermaker {
     public:
         RepoManage();
         void render() override;
-        void reset();
-        void save();
+        int reset();
+        int save();
         void deleteUser(const ST::string& user);
         const std::set<ST::string>& getRepoNames();
     };

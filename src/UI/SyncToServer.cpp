@@ -224,7 +224,14 @@ namespace bakermaker {
             }
         }
 
-        ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::REPO_MANAGE])->reset();
+        if(0 != ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::REPO_MANAGE])->reset()) {
+            sftp_free(sftp);
+            ssh_disconnect(sess);
+            ssh_free(sess);
+            success = -10;
+            execDone = true;
+            return;
+        }
 
         sftp_free(sftp);
         ssh_disconnect(sess);

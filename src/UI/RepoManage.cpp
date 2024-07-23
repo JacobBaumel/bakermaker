@@ -188,18 +188,18 @@ namespace bakermaker {
         if(!confirmed && !config["synced"].get<bool>()) ImGui::EndDisabled();
     }
 
-    void RepoManage::reset() {
+    int RepoManage::reset() {
         using namespace ST::literals;
         if(!std::filesystem::exists("gitolite.conf") ||
            std::filesystem::is_directory("gitolite.conf"))
-            return;
+            return -1;
 
         std::ifstream conf("gitolite.conf");
 
         if(!conf.is_open()) {
             bakermaker::startErrorModal("Error reading config file. Try again.");
             config["synced"] = false;
-            return;
+            return-2;
         }
 
         ST::string currentRepo;
@@ -242,9 +242,11 @@ namespace bakermaker {
                 currentRepo.clear();
             }
         }
+
+        return 0;
     }
 
-    void RepoManage::save() {
+    int RepoManage::save() {
         std::ofstream conf("gitolite.conf", std::ios::binary | std::ios::trunc);
         conf << "repo gitolite-admin\n\tRW+\t= admin\n\n";
 
@@ -260,6 +262,8 @@ namespace bakermaker {
         }
 
         conf.close();
+
+        return 0;
     }
 
     void RepoManage::deleteUser(const ST::string& user) {
