@@ -13,7 +13,7 @@ namespace bakermaker {
         std::atomic_bool execDone;
         std::atomic_int success;
 
-        void extractClient(const ST::string ip);
+        void extractClient(const ST::string ip, const int port);
 
     public:
         ClientExtract();

@@ -3,7 +3,6 @@
 #include "romfs/romfs.hpp"
 #include "utils.h"
 #include <fstream>
-#include <chrono>
 
 namespace bakermaker {
     ClientExtract::ClientExtract()
@@ -25,7 +24,8 @@ namespace bakermaker {
             config["extracting"] = true;
             execDone = false;
             success = 0;
-            exec = new std::thread(&ClientExtract::extractClient, this, config["server"]["ip"].get<ST::string>());
+            exec = new std::thread(&ClientExtract::extractClient, this, config["server"]["ip"].get<ST::string>(),
+                                   config["server"]["port"].get<int>());
             ImGui::BeginDisabled();
         }
 
@@ -53,10 +53,15 @@ namespace bakermaker {
         }
     }
 
-    void ClientExtract::extractClient(const ST::string ip) {
+    void ClientExtract::extractClient(const ST::string ip, const int port) {
         using namespace ST::literals;
 
         success = 0;
+
+        if(std::filesystem::exists("bakermakerclient")) {
+            std::filesystem::remove_all("bakermakerclient");
+        }
+
         std::filesystem::create_directories("bakermakerclient");
 
         {
@@ -81,12 +86,9 @@ namespace bakermaker {
         }
 
         std::ofstream ipfile("bakermakerclient/ip");
-        ipfile << ip.c_str();
+        ipfile << ip.c_str() << '\n';
+        ipfile << port;
         ipfile.close();
-
-        using namespace std::literals;
-        std::this_thread::sleep_for(2000ms);
-
         execDone = true;
     }
 }
