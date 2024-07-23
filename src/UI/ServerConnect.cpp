@@ -1,16 +1,21 @@
 #include "imgui.h"
-#include "UI/ServerConnect.h"
-#include "UI/BaseUIScreen.h"
-#include <iostream>
-#include "utils.h"
+#include "libssh/libssh.h"
 #include "string_theory/string"
+
+#include "UI/BaseUIScreen.h"
+#include "UI/ServerConnect.h"
+#include "ssh_helper.h"
+#include "utils.h"
 
 namespace bakermaker {
     using namespace ST::literals;
 
-    ServerConnect::ServerConnect() : BaseUIScreen(bakermaker::ProgramStage::SERVER_CONNECT, &bakermaker::setupScreens),
-                                     execDone(false) {
-        browser = new ImGui::FileBrowser(FILE_PICKER_FLAGS);
+    static constexpr int FILE_PICKER_FLAGS = ImGuiFileBrowserFlags_CloseOnEsc |
+        ImGuiFileBrowserFlags_ConfirmOnEnter;
+
+    ServerConnect::ServerConnect() : BaseUIScreen(ProgramStage::SERVER_CONNECT, &setupScreens),
+                                     browser(new ImGui::FileBrowser(FILE_PICKER_FLAGS)),
+                                     exec(nullptr), execDone(false), success(1) {
         browser->SetTitle("Choose SSH Private Key");
         browser->ClearSelected();
 
@@ -23,11 +28,13 @@ namespace bakermaker {
     }
 
     void ServerConnect::render() {
+        // Header
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Server Connection Information");
         ImGui::PopFont();
         ImGui::Separator();
 
+        // Inputs for IP address, port, username, and ssh key path
         ImGui::Text("Server IP: ");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(150);
@@ -56,13 +63,13 @@ namespace bakermaker {
 
         ImGui::NewLine();
         if(ImGui::Button("Submit##server_connect")) {
-            sshrc = 1;
+            success = 1;
             execDone = false;
-            exec = new std::thread([this]() {
+            exec = new std::thread([this] {
                 ssh_session session;
                 ST::string path = browser->GetSelected().string();
-                sshrc = createSession(session, ip, user, path.c_str(), port);
-                if(sshrc == 0) {
+                success = createSession(session, ip, user, path.c_str(), port);
+                if(success == 0) {
                     ssh_disconnect(session);
                     ssh_free(session);
                 }
@@ -74,7 +81,7 @@ namespace bakermaker {
         if(exec && !execDone) {
             ImGui::EndDisabled();
             ImGui::SameLine();
-            bakermaker::spinner();
+            spinner();
         }
 
         if(execDone) {
@@ -83,7 +90,7 @@ namespace bakermaker {
                 delete exec;
                 exec = nullptr;
 
-                switch(sshrc) {
+                switch(success) {
                 case 0:
                     config["server"]["ip"] = ip;
                     config["server"]["port"] = port;
@@ -93,31 +100,31 @@ namespace bakermaker {
                     break;
 
                 case -1:
-                    bakermaker::startErrorModal("Could not initialize SSH Session. Application Error. (-1)");
+                    startErrorModal("Could not initialize SSH Session. Application Error. (-1)");
                     break;
 
                 case -2:
-                    bakermaker::startErrorModal("Could not connect to SSH server (-2)");
+                    startErrorModal("Could not connect to SSH server (-2)");
                     break;
 
                 case -3:
-                    bakermaker::startErrorModal("Error processing public key (-3)");
+                    startErrorModal("Error processing public key (-3)");
                     break;
 
                 case -4:
-                    bakermaker::startErrorModal("Error processing private key (-4)");
+                    startErrorModal("Error processing private key (-4)");
                     break;
 
                 case -5:
-                    bakermaker::startErrorModal("Could not read private key file (-5)");
+                    startErrorModal("Could not read private key file (-5)");
                     break;
 
                 default:
-                    bakermaker::startErrorModal("Unknown error code!");
+                    startErrorModal("Unknown error code!");
                 }
             }
 
-            if(sshrc == 0) {
+            if(success == 0) {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
                 ImGui::Text("Success!");
                 ImGui::PopStyleColor();

@@ -1,22 +1,24 @@
-#include "UI/SyncToServer.h"
-#include "UI/RepoManage.h"
 #include <filesystem>
-#include "libssh/libssh.h"
-#include "libssh/sftp.h"
-#include "ssh_helper.h"
-#include "utils.h"
-#include <iostream>
 #include <set>
 
-namespace bakermaker {
-    SyncToServer::SyncToServer()
-            : BaseUIScreen(bakermaker::ProgramStage::SYNC_TO_SERVER, &bakermaker::configScreens),
-              exec(nullptr), execDone(false), success(0), status(""), statusmutex() {
+#include "libssh/libssh.h"
+#include "libssh/sftp.h"
 
+#include "UI/RepoManage.h"
+#include "ssh_helper.h"
+#include "UI/SyncToServer.h"
+#include "utils.h"
+
+namespace bakermaker {
+    using namespace ST::literals;
+
+    SyncToServer::SyncToServer() : BaseUIScreen(ProgramStage::SYNC_TO_SERVER, &configScreens), exec(nullptr),
+                                   execDone(false), success(0), status("") {
     }
 
     void SyncToServer::render() {
-        ImGui::PushFont(fontlist[0]);
+        // Header
+        ImGui::PushFont(fontlist[1]);
         ImGui::Text("Sync to server");
         ImGui::PopFont();
 
@@ -42,8 +44,7 @@ namespace bakermaker {
             ImGui::NewLine();
             ImGui::PushFont(fontlist[2]);
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
-            ImGui::Text(
-                    "WARNING: You have unsaved changes. Either save changes to server, or reset by syncing.");
+            ImGui::Text("WARNING: You have unsaved changes. Either save changes to server, or reset by syncing.");
             ImGui::PopStyleColor();
             ImGui::PopFont();
         }
@@ -54,7 +55,7 @@ namespace bakermaker {
             ImGui::Text("%s", status.c_str());
             statusmutex.unlock();
             ImGui::SameLine();
-            bakermaker::spinner();
+            spinner();
         }
 
         if(execDone) {
@@ -64,15 +65,13 @@ namespace bakermaker {
                 exec = nullptr;
 
                 if(success < 0) {
-                    bakermaker::startErrorModal(
-                            (ST::string("Sync failed with error: ") + std::to_string(success) +
-                             "\n\n" + status).c_str());
+                    startErrorModal(
+                        ("Sync failed with error: "_st + std::to_string(success) + "\n\n" + status).c_str());
                 }
 
                 else if(success > 0) {
-                    bakermaker::startErrorModal(
-                            (ST::string("Save failed with error: ") + std::to_string(success) +
-                             "\n\n" + status).c_str());
+                    startErrorModal(
+                        ("Save failed with error: "_st + std::to_string(success) + "\n\n" + status).c_str());
                 }
 
                 else {
@@ -87,18 +86,16 @@ namespace bakermaker {
                 ImGui::PopStyleColor();
             }
         }
-
     }
 
     void SyncToServer::syncFrom() {
-        ssh_session sess;
-        memset((void*) &sess, 0, sizeof(ssh_session));
+        ssh_session sess = {};
         {
-            int rc = bakermaker::createSession(sess,
-                                               config["server"]["ip"].get<std::string>().c_str(),
-                                               config["server"]["user"].get<std::string>().c_str(),
-                                               "./keyfile",
-                                               config["server"]["port"].get<int>());
+            int rc = createSession(sess,
+                                   config["server"]["ip"].get<std::string>().c_str(),
+                                   config["server"]["user"].get<std::string>().c_str(),
+                                   "./keyfile",
+                                   config["server"]["port"].get<int>());
 
             if(rc != SSH_OK) {
                 statusmutex.lock();
@@ -113,10 +110,8 @@ namespace bakermaker {
         sftp_session sftp = sftp_new(sess);
         sftp_init(sftp);
 
-        sftp_dir dir;
+        sftp_dir dir = sftp_opendir(sftp, "gitolite-admin/keydir");
         sftp_attributes atr;
-
-        dir = sftp_opendir(sftp, "gitolite-admin/keydir");
 
         if(!dir) {
             statusmutex.lock();
@@ -132,9 +127,8 @@ namespace bakermaker {
 
         while((atr = sftp_readdir(sftp, dir)) != nullptr) {
             if(strcmp(atr->name, ".") == 0 || strcmp(atr->name, "..") == 0) continue;
-            int rc = downloadToLocal(sftp,
-                                     (ST::string("gitolite-admin/keydir/") + atr->name).c_str(),
-                                     (ST::string("keys/") + atr->name).c_str());
+            int rc = downloadToLocal(sftp, ("gitolite-admin/keydir/"_st + atr->name).c_str(),
+                                     ("keys/"_st + atr->name).c_str());
 
             if(rc != 0) {
                 setStatus(rc);
@@ -154,13 +148,13 @@ namespace bakermaker {
         sftp_closedir(dir);
 
         std::set<ST::string> files;
-        for(const auto& file: std::filesystem::directory_iterator("keys"))
+        for(const auto& file : std::filesystem::directory_iterator("keys"))
             files.insert(file.path().string().substr(5).c_str());
 
         std::set<ST::string> nopriv;
         std::set<ST::string> nopub;
 
-        for(const auto& str: files) {
+        for(const auto& str : files) {
             if(str.ends_with(".pub")) {
                 ST::string subed = str.substr(0, str.size() - 4);
                 if(files.count(subed) == 0)
@@ -177,8 +171,8 @@ namespace bakermaker {
 
                 ssh_key prkey;
                 if(SSH_OK !=
-                   ssh_pki_import_privkey_file(str.c_str(), "", nullptr,
-                                               nullptr, &prkey)) {
+                    ssh_pki_import_privkey_file(str.c_str(), "", nullptr,
+                                                nullptr, &prkey)) {
                     statusmutex.lock();
                     status = "Failed to read private key: " + str;
                     statusmutex.unlock();
@@ -206,7 +200,7 @@ namespace bakermaker {
             }
         }
 
-        for(const auto& str: nopriv) files.erase(str);
+        for(const auto& str : nopriv) files.erase(str);
         std::erase_if(files, [](const ST::string& str) { return str.ends_with(".pub"); });
         config["keys"] = files;
 
@@ -224,7 +218,7 @@ namespace bakermaker {
             }
         }
 
-        if(0 != ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::REPO_MANAGE])->reset()) {
+        if(0 != ((RepoManage*)configScreens[ProgramStage::REPO_MANAGE])->reset()) {
             sftp_free(sftp);
             ssh_disconnect(sess);
             ssh_free(sess);
@@ -241,10 +235,10 @@ namespace bakermaker {
         status.clear();
 
         if(!nopriv.empty()) {
-            status += "The following public keys were present on the server, but their corresponding private keys were not"
-                      "present on this computer. These keys may be usable, if the private key still exists:\n";
-            for(const auto& key: nopriv) {
-                std::cout << key.c_str() << std::endl;
+            status +=
+                "The following public keys were present on the server, but their corresponding private keys were not"
+                "present on this computer. These keys may be usable, if the private key still exists:\n";
+            for(const auto& key : nopriv) {
                 status += key + '\n';
             }
 
@@ -253,8 +247,8 @@ namespace bakermaker {
 
         if(!nopub.empty()) {
             status += "The following users were not registered with the server, but did have private keys present on"
-                      " this computer. Public keys were created and will be uploaded on the next save:\n";
-            for(const auto& key: nopub) {
+                " this computer. Public keys were created and will be uploaded on the next save:\n";
+            for(const auto& key : nopub) {
                 status += key + '\n';
             }
         }
@@ -263,16 +257,12 @@ namespace bakermaker {
     }
 
     void SyncToServer::syncTo(const ST::string deleterepo) {
-        using namespace ST::literals;
+        ssh_session sess = {};
 
-        ssh_session sess;
-        memset((void*) &sess, 0, sizeof(ssh_session));
-
-
-        int rc = bakermaker::createSession(sess, config["server"]["ip"].get<std::string>().c_str(),
-                                           config["server"]["user"].get<std::string>().c_str(),
-                                           "./keyfile",
-                                           config["server"]["port"].get<int>());
+        int rc = createSession(sess, config["server"]["ip"].get<std::string>().c_str(),
+                               config["server"]["user"].get<std::string>().c_str(),
+                               "./keyfile",
+                               config["server"]["port"].get<int>());
 
         if(rc != SSH_OK) {
             statusmutex.lock();
@@ -286,17 +276,15 @@ namespace bakermaker {
         sftp_session sftp = sftp_new(sess);
         sftp_init(sftp);
 
-        bakermaker::runCommand(sess, "rm gitolite-admin/keydir/*.pub");
+        runCommand(sess, "rm gitolite-admin/keydir/*.pub");
 
-        for(const auto& file: std::filesystem::directory_iterator("keys")) {
+        for(const auto& file : std::filesystem::directory_iterator("keys")) {
             ST::string path = file.path().string().c_str();
             if(!path.ends_with(".pub")) continue;
             statusmutex.lock();
             status = "Saving changes to server: Uploading "_st + path;
             statusmutex.unlock();
-            if(0 != bakermaker::uploadToRemote(sftp, path.c_str(),
-                                               ("gitolite-admin/keydir/"_st +
-                                                path.substr(5)).c_str())) {
+            if(0 != uploadToRemote(sftp, path.c_str(), ("gitolite-admin/keydir/"_st + path.substr(5)).c_str())) {
                 success = -2;
                 sftp_free(sftp);
                 ssh_disconnect(sess);
@@ -310,23 +298,20 @@ namespace bakermaker {
         status = "Saving changes to server: Uploading gitolite.conf";
         statusmutex.unlock();
 
-        if(0 !=
-           bakermaker::uploadToRemote(sftp, "gitolite.conf", "gitolite-admin/conf/gitolite.conf")) {
+        if(0 != uploadToRemote(sftp, "gitolite.conf", "gitolite-admin/conf/gitolite.conf")) {
             success = -3;
         }
 
         statusmutex.lock();
         status = "Committing changes";
         statusmutex.unlock();
-        bakermaker::runCommand(sess, "~/commitall.sh");
+        runCommand(sess, "~/commitall.sh");
 
         if(!deleterepo.empty()) {
             statusmutex.lock();
             status = "Deleting repository "_st + deleterepo;
             statusmutex.unlock();
-            int rc = bakermaker::runCommand(sess,
-                                            ("sudo rm -rf /home/git/repositories/"_st +
-                                             deleterepo + ".git"_st).c_str());
+            rc = runCommand(sess, ("sudo rm -rf /home/git/repositories/"_st + deleterepo + ".git"_st).c_str());
             if(rc != 0) success = -4;
         }
 
@@ -344,32 +329,32 @@ namespace bakermaker {
         success = 0;
         status = "Saving to server";
         config["synced"] = false;
-        ((bakermaker::RepoManage*) bakermaker::configScreens[bakermaker::ProgramStage::REPO_MANAGE])->save();
+        ((RepoManage*) configScreens[ProgramStage::REPO_MANAGE])->save();
         exec = new std::thread(&SyncToServer::syncTo, this, deleterepo);
     }
 
-    void SyncToServer::setStatus(int rc) {
+    void SyncToServer::setStatus(const int rc) {
         statusmutex.lock();
         switch(rc) {
-            case -1:
-                status = "Failed to open remote file";
-                break;
+        case -1:
+            status = "Failed to open remote file";
+            break;
 
-            case -2:
-                status = "Failed to open local file";
-                break;
+        case -2:
+            status = "Failed to open local file";
+            break;
 
-            case -3:
-                status = "Failed to read remote file";
-                break;
+        case -3:
+            status = "Failed to read remote file";
+            break;
 
-            case -4:
-                status = "Failed to write to local file";
-                break;
+        case -4:
+            status = "Failed to write to local file";
+            break;
 
-            default:
-                status = "";
-                break;
+        default:
+            status = "";
+            break;
         }
 
         statusmutex.unlock();

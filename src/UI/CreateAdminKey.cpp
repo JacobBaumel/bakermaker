@@ -1,198 +1,76 @@
-#include "UI/CreateAdminKey.h"
-#include "UI/BaseUIScreen.h"
-#include "romfs/romfs.hpp"
-#include "utils.h"
-#include <filesystem>
-#include "ssh_helper.h"
-#include <iostream>
-#include "improgress.h"
 #include <chrono>
+#include <filesystem>
 #include <set>
 
-namespace bakermaker {
-    CreateAdminKey::CreateAdminKey() : BaseUIScreen(bakermaker::ProgramStage::SSH_KEYGEN_ADMIN, &bakermaker::setupScreens),
-                                       exec(nullptr), success(0), execDone(false) {
-        romfs::Resource text = romfs::get("SSHAdminKeyGen.md");
-        instructions = ST::string((char*) text.data(), text.size());
+#include "romfs/romfs.hpp"
 
+#include "UI/BaseUIScreen.h"
+#include "UI/CreateAdminKey.h"
+#include "setup.h"
+#include "ssh_helper.h"
+#include "utils.h"
+
+namespace bakermaker {
+    CreateAdminKey::CreateAdminKey() : BaseUIScreen(ProgramStage::SSH_KEYGEN_ADMIN, &setupScreens), showSuccess(false) {
+        // Load instructions from romfs
+        const romfs::Resource text = romfs::get("SSHAdminKeyGen.md");
+        instructions = ST::string((const char*)text.data(), text.size());
+
+        // Create "keys/" directory if it does not exist
         if(!std::filesystem::exists("keys") && !std::filesystem::is_directory("keys"))
             std::filesystem::create_directories("keys");
     }
 
     void CreateAdminKey::render() {
+        // Section header
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Create SSH Keys");
         ImGui::PopFont();
         ImGui::Separator();
 
-        bakermaker::documentation->render(instructions);
+        // Render instructions
+        documentation->render(instructions);
         ImGui::NewLine();
 
+        // If button pushed, create the admin key file
         ImGui::Text("Create admin user: ");
-        if((exec && !execDone) || execDone || !config["keys"].empty()) ImGui::BeginDisabled();
-
         if(ImGui::Button("Create Admin User")) {
-            execDone = false;
-
-            std::set<std::string> users = config["keys"].get<std::set<std::string>>();
-
-            if(users.contains(std::string("admin"))) {
-                bakermaker::startErrorModal("User admin has already been added.");
+            if(config["keys"].get<std::set<std::string>>().contains(std::string("admin"))) {
+                startErrorModal("User admin has already been added.");
             }
-            else {
-                exec = new std::thread(&bakermaker::createUser, "admin", &execDone, &success);
-                ImGui::BeginDisabled();
-            }
-        }
 
-        if((exec && !execDone) || execDone || !config["keys"].empty()) {
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            if(!execDone) bakermaker::spinner();
-        }
+            else
+                switch(genSSHKeyToFile("keys/admin")) {
+                case 0:
+                    config["keys"].push_back("admin");
+                    showSuccess = true;
+                    break;
 
-        if(execDone) {
-            if(exec) {
-                exec->join();
-                delete exec;
-                exec = nullptr;
+                case 1:
+                    startErrorModal("Failed to generate SSH key!");
+                    break;
 
-                switch(success) {
-                    case 0:
-                        config["keys"].push_back("admin");
-                        break;
+                case 2:
+                    startErrorModal("Failed to export key to file!");
+                    break;
 
-                    case 1:
-                        bakermaker::startErrorModal("Failed to generate SSH key!");
-                        break;
+                case 3:
+                    startErrorModal("Failed to generate public key!");
+                    break;
 
-                    case 2:
-                        bakermaker::startErrorModal("Failed to export key to file!");
-                        break;
+                case 4:
+                    startErrorModal("Failed to export public key to file!");
+                    break;
 
-                    case 3:
-                        bakermaker::startErrorModal("Failed to generate public key!");
-                        break;
-
-                    case 4:
-                        bakermaker::startErrorModal("Failed to export public key to file!");
-                        break;
-
+                default:
+                    break;
                 }
-            }
-
-            if(success == 0) {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
-                ImGui::Text("Success!");
-                ImGui::PopStyleColor();
-            }
         }
 
-//        ImGui::NewLine();
-//
-//        ImGui::PushFont(fontlist[2]);
-//        ImGui::Text("Added Users:");
-//        ImGui::PopFont();
-//
-//        if(ImGui::BeginTable("table", 2,
-//                             ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(600, 0))) {
-//            for(const auto& name : users) {
-//                ImGui::TableNextRow();
-//                ImGui::TableNextColumn();
-//                ImGui::Text("%s", name);
-//                ImGui::TableNextColumn();
-//                if(ImGui::Button((ST::string("Delete##") + name).c_str())) {
-//                    execDone = false;
-//                    exec = new std::thread(&CreateAdminKey::deleteUser, name, &execDone, &success, &users);
-//                }
-//            }
-//            ImGui::EndTable();
-//        }
-//
-//
-//
-//        if(hasConfirmed) ImGui::BeginDisabled();
-//        ImGui::Text("Admin User: ");
-//        ImGui::SameLine();
-//        ImGui::SetNextItemWidth(600);
-//        ImGui::InputText("##admin_enter", adminname, USERLENGTH);
-//
-//        ImGui::NewLine();
-//        ImGui::Text("Enter Regular Users:");
-//        ImGui::NewLine();
-//        ImGui::Text("Name:                                                    "
-//                    "     Permission (true = advanced, false = normal");
-//
-//        int i = 0;
-//        for(const auto& entry : users) {
-//            ImGui::SetNextItemWidth(600);
-//            ImGui::InputText((ST::string("##usernameinput") + i).c_str(), entry.first, USERLENGTH);
-//            ImGui::SameLine();
-//            ImGui::Checkbox(((ST::string("##usercheckbox") + i).c_str()), entry.second);
-//            i++;
-//        }
-//
-//        if(ImGui::Button("Add more users")) {
-//            char* newbuf = new char[USERLENGTH];
-//            memset((void*) newbuf, 0, USERLENGTH);
-//            bool* newbool = new bool(false);
-//
-//            users[newbuf] = newbool;
-//        }
-//
-//        ImGui::NewLine();
-//        if(ImGui::Button("Confirm Users")) {
-//            hasConfirmed = true;
-//
-//            Json(config["keys"]) << Json::object();
-//            config["keys"][0]["name"] = adminname;
-//            config["keys"][0]["perm"] = 0;
-//
-//            bool yes = true;
-//            users[adminname] = &yes;
-//
-//            for(const auto& entry : users) {
-//                int length = Json(config["keys"]).size();
-//                Json(config["keys"]) << Json::object();
-//                config["keys"][length]["name"] = entry.first;
-//                config["keys"][length]["perm"] = *entry.second ? 1 : 2;
-//            }
-//
-//            exec = new std::thread([this](){
-//                execDone = false;
-//                execProgress = 0;
-//                execTotal = users.size();
-//
-//                for(const auto& entry : users) {
-//                    int rc = genSSHKeyToFile(("keys/" + ST::string(entry.first)).c_str());
-//                    std::cout << entry.first << ": " << rc << std::endl;
-//                    execProgress++;
-//                }
-//
-//                execDone = true;
-//            });
-//        }
-//        else if(hasConfirmed) ImGui::EndDisabled();
-//
-//        if(hasConfirmed) {
-//            ImGui::Text("Generating keys: %i / %llu", execProgress.load(), execTotal.load());
-//
-//            if(!execDone) {
-//                ImGui::SameLine();
-//                ImGui::Spinner("##libs_extract", 10, 1,
-//                               ImGui::GetColorU32(ImVec4(0.1, 0.1, 0.75, 1)));
-//            }
-//
-//            else {
-//                if(exec != nullptr) {
-//                    exec->join();
-//                    delete exec;
-//                    exec = nullptr;
-//                }
-//
-//                ImGui::Text("Key Generation Complete");
-//            }
-//        }
+        if(showSuccess) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+            ImGui::Text("Success!");
+            ImGui::PopStyleColor();
+        }
     }
-
 }

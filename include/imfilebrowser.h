@@ -1,7 +1,3 @@
-//
-// Created by jacob on 4/14/24.
-//
-
 #ifndef IMGUI_FILEBROWSER_IMFILEBROWSER_H
 #define IMGUI_FILEBROWSER_IMFILEBROWSER_H
 

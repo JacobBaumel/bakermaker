@@ -1,7 +1,7 @@
 ![git](image.png) 
 # Git sever setup instructions
 This is a guide that goes along with the main software that walks through the process of setting up a git server. 
-Althought the appplication will manage most of the setup automatically, this guide is present in case anything goes wrong. 
+Although the application will manage most of the setup automatically, this guide is present in case anything goes wrong. 
 In addition, there is a video tutorial [here](https://youtube.com) which also walks through the whole process.
 
 If needed, I can be contacted at [jacob.a.baumel@gmail.com](mailto:jacob.a.baumel@gmail.com) with any questions.

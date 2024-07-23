@@ -1,16 +1,20 @@
-#include "UI/ClientExtract.h"
 #include <filesystem>
-#include "romfs/romfs.hpp"
-#include "utils.h"
 #include <fstream>
 
+#include "romfs/romfs.hpp"
+
+#include "UI/ClientExtract.h"
+#include "utils.h"
+
 namespace bakermaker {
-    ClientExtract::ClientExtract()
-            :
-            BaseUIScreen(bakermaker::ProgramStage::CLIENT_EXTRACT, &bakermaker::configScreens),
-            exec(nullptr), execDone(false), success(0) {}
+    using namespace ST::literals;
+
+    ClientExtract::ClientExtract() : BaseUIScreen(ProgramStage::CLIENT_EXTRACT, &configScreens), exec(nullptr),
+                                     execDone(false), success(0) {
+    }
 
     void ClientExtract::render() {
+        // Section header
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Extract Client");
         ImGui::PopFont();
@@ -32,7 +36,7 @@ namespace bakermaker {
         if(exec && !execDone) {
             ImGui::EndDisabled();
             ImGui::SameLine();
-            bakermaker::spinner();
+            spinner();
         }
 
         if(execDone) {
@@ -41,7 +45,7 @@ namespace bakermaker {
                 delete exec;
                 exec = nullptr;
 
-                if(success != 0) bakermaker::startErrorModal("Error extracting client setup!");
+                if(success != 0) startErrorModal("Error extracting client setup!");
                 else config["extracting"] = false;
             }
 
@@ -54,21 +58,21 @@ namespace bakermaker {
     }
 
     void ClientExtract::extractClient(const ST::string ip, const int port) {
-        using namespace ST::literals;
-
         success = 0;
 
+        // If a client program has already been extracted, delete it and create a new directory
         if(std::filesystem::exists("bakermakerclient")) {
             std::filesystem::remove_all("bakermakerclient");
         }
 
         std::filesystem::create_directories("bakermakerclient");
 
+        // Load client program from romfs and write to disk
         {
             romfs::Resource bmc = romfs::get("bakermakerclient.exe");
             FILE* file;
             fopen_s(&file, "bakermakerclient/bakermakerclient.exe", "wb");
-            size_t nwritten = fwrite((void*) bmc.data(), 1, bmc.size(), file);
+            size_t nwritten = fwrite(bmc.data(), 1, bmc.size(), file);
             fclose(file);
 
             if(nwritten != bmc.size()) {
@@ -77,14 +81,16 @@ namespace bakermaker {
             }
         }
 
+        // Copy private keys to the client program directory
         std::filesystem::create_directories("bakermakerclient/keys");
         for(const auto& file : std::filesystem::directory_iterator("keys")) {
             if(file.path().string().ends_with(".pub")) continue;
             ST::string dest = file.path().string();
             dest = dest.after_last('\\');
-            std::filesystem::copy_file(file, ("bakermakerclient/keys/"_st + dest).c_str());
+            copy_file(file, ("bakermakerclient/keys/"_st + dest).c_str());
         }
 
+        // Create the "ip" file
         std::ofstream ipfile("bakermakerclient/ip");
         ipfile << ip.c_str() << '\n';
         ipfile << port;

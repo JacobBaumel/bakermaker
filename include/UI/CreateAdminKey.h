@@ -1,31 +1,22 @@
-//
-// Created by skipp on 5/1/2024.
-//
-
 #ifndef BAKERMAKER_CREATEADMINKEY_H
 #define BAKERMAKER_CREATEADMINKEY_H
 
-#include "UI/BaseUIScreen.h"
-#include "string_theory/string"
-#include <vector>
 #include <thread>
 #include <atomic>
+
+#include "UI/BaseUIScreen.h"
 #include "utils.h"
 
 namespace bakermaker {
+    // UI element to create the gitolite admin key
     class CreateAdminKey : public BaseUIScreen {
-    private:
+        // To store small blurb about the key to be rendered by the markdown renderer
         ST::string instructions;
-
-        std::thread* exec;
-        std::atomic_bool execDone;
-        std::atomic_int success;
-
+        bool showSuccess;
 
     public:
         CreateAdminKey();
         void render() override;
-        
     };
 }
 

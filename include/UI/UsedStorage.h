@@ -1,23 +1,21 @@
 #ifndef BAKERMAKER_USEDSTORAGE_H
 #define BAKERMAKER_USEDSTORAGE_H
 
-#include "UI/BaseUIScreen.h"
-#include <thread>
 #include <atomic>
 #include <map>
 #include <set>
-#include "string_theory/string"
-#include "libssh/libssh.h"
+#include <thread>
 
-using namespace ST::literals;
+#include "libssh/libssh.h"
+#include "string_theory/string"
+
+#include "UI/BaseUIScreen.h"
 
 namespace bakermaker {
     typedef int64_t storage_t;
-    class UsedStorage : public BaseUIScreen {
-    private:
 
-        const ImU32 fg = 0xff00ff00;
-        const ImU32 bg = 0xff303030;
+    // UI to show how much storage has been used on the server
+    class UsedStorage : public BaseUIScreen {
         std::thread* exec;
         std::atomic_bool execDone;
         std::atomic_int success;
@@ -29,7 +27,10 @@ namespace bakermaker {
 
         std::atomic_bool hasRefreshed;
 
+        // Function which refreshes all storage values. To be run in a thread.
         void refresh();
+
+        // Helper function for actually retrieving the size of a directory
         static storage_t getSizeOfSomething(ssh_session sess, const ST::string& path, int option);
 
     public:

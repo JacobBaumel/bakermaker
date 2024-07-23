@@ -1,63 +1,69 @@
+#include <fstream>
+
+#include "imgui.h"
+#include "string_theory/iostream"
+#include "string_theory/string"
+
 #include "UI/RepoManage.h"
 #include "UI/SyncToServer.h"
-#include "imgui.h"
-#include <fstream>
-#include "string_theory/iostream"
-#include "string_theory/stdio"
 #include "utils.h"
 
 namespace bakermaker {
+    using namespace ST::literals;
+
+    // Function to get a line from an ifstream and write to ST::string
     ST::string getLine(std::ifstream& stream) {
         std::string line;
         std::getline(stream, line, '\n');
         return ST::string{line};
     }
 
-    RepoManage::RepoManage()
-            :
-            BaseUIScreen(bakermaker::ProgramStage::REPO_MANAGE, &bakermaker::configScreens),
-            repos(), reponames(), selectedRepo(""), selectedName(1), showConfirm(false) {
+    RepoManage::RepoManage() : BaseUIScreen(ProgramStage::REPO_MANAGE, &configScreens), selectedRepo(""),
+                               selectedName(1), showConfirm(false) {
         reset();
     }
 
     void RepoManage::render() {
-        using namespace ST::literals;
-
+        // Header, and disable section if have not synced
         if(!config["synced"].get<bool>()) ImGui::BeginDisabled();
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Manage Repositories");
         ImGui::PopFont();
         ImGui::Separator();
 
+        // Text field for new repository name
         ImGui::Text("Enter New Repository Name: ");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(600);
-        bool enter = ImGui::InputText("##newrepo_name", newrepo, USERLENGTH,
-                                      ImGuiInputTextFlags_EnterReturnsTrue);
+        const bool enter = ImGui::InputText("##newrepo_name", newrepo, USERLENGTH,
+                                            ImGuiInputTextFlags_EnterReturnsTrue);
         ImGui::SameLine();
 
         if(enter || ImGui::Button("Create")) {
-            if(newrepo[0] == '\0') bakermaker::startErrorModal("Please enter a name!");
-            else if(reponames.contains(newrepo))
-                bakermaker::startErrorModal("Repository already exists!");
+            // Check that newrepo is not empty, and that the repo does not already exist
+            if(newrepo[0] == '\0') startErrorModal("Please enter a name!");
+            else if(reponames.contains(newrepo)) startErrorModal("Repository already exists!");
             else {
-                ST::string rname = newrepo;
+                const ST::string rname = newrepo;
                 reponames.insert(rname);
                 repos[rname] = std::set<RepoUser, RepoUserSort>();
                 selectedRepo = rname;
-                memset((void*) newrepo, 0, USERLENGTH);
+                memset(newrepo, 0, USERLENGTH);
                 if(enter) ImGui::SetKeyboardFocusHere(-1);
                 config["unsaved"] = true;
             }
         }
+
         ImGui::NewLine();
 
+        // Only show this UI if a repo exists
         if(!reponames.empty()) {
+            // Dropdown selector for selecting which repository to edit
             ImGui::Text("Select repository to edit: ");
             ImGui::SameLine();
             ImGui::SetNextItemWidth(600);
             if(ImGui::BeginCombo("##repo_select_combo", selectedRepo.c_str())) {
-                for(const ST::string& str: reponames) {
+                for(const ST::string& str : reponames) {
                     bool selected = str == selectedRepo;
                     if(ImGui::Selectable((str + "##reposelect").c_str(), &selected))
                         selectedRepo = str;
@@ -67,6 +73,7 @@ namespace bakermaker {
                 ImGui::EndCombo();
             }
 
+            // Table to manage user perms. Contains a row with name, admin checkbox, and delete button
             ImGui::PushFont(fontlist[3]);
             ImGui::Text("Manage Users");
             ImGui::PopFont();
@@ -94,30 +101,29 @@ namespace bakermaker {
                         config["unsaved"] = true;
                     }
 
-                    else it++;
+                    else ++it;
                 }
 
                 ImGui::EndTable();
             }
         }
 
+        // Dropdown selector to add additional users to repositories
         ImGui::Text("Add user to repository: ");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(600);
 
+        // First check there are more than just the admin user created
         if(config["keys"].size() <= 1) {
             ImGui::Text("Please add users above first");
         }
 
         else {
             ImGui::SetNextItemWidth(600);
-            if(ImGui::BeginCombo("##add_user_combo",
-                                 config["keys"][selectedName].get<ST::string>().c_str())) {
+            if(ImGui::BeginCombo("##add_user_combo", config["keys"][selectedName].get<ST::string>().c_str())) {
                 for(size_t i = 1; i < config["keys"].size(); i++) {
                     bool selected = selectedName == i;
-                    if(ImGui::Selectable(
-                            (config["keys"][i].get<ST::string>() + "##combo"_st).c_str(),
-                            &selected))
+                    if(ImGui::Selectable((config["keys"][i].get<ST::string>() + "##combo"_st).c_str(), &selected))
                         selectedName = i;
                     if(selected) ImGui::SetItemDefaultFocus();
                 }
@@ -128,13 +134,12 @@ namespace bakermaker {
             if(ImGui::Button("Add##usercomboaddthing")) {
                 ST::string user = config["keys"][selectedName].get<ST::string>();
                 if(repos[selectedRepo].contains(RepoUser(user, false)))
-                    bakermaker::startErrorModal("User already exists in repositor!");
-                else {
-                    repos[selectedRepo].insert(RepoUser(user, false));
-                }
+                    startErrorModal("User already exists in repositor!");
+                else repos[selectedRepo].insert(RepoUser(user, false));
             }
         }
 
+        // Delete button for repository
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 0, 0, 1));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9, 0, 0, 1));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1, 0, 0, 1));
@@ -143,6 +148,7 @@ namespace bakermaker {
 
         bool confirmed = false;
 
+        // Confirmation for deleting
         if(showConfirm) {
             ImVec2 size{525, 175};
             ImGui::SetNextWindowSize(size);
@@ -151,18 +157,17 @@ namespace bakermaker {
             screenSize.x = (screenSize.x - size.x) / 2;
             screenSize.y = (screenSize.y - size.y) / 2;
             ImGui::SetNextWindowPos(screenSize);
-            if(ImGui::Begin("Confirm Delete", nullptr,
-                            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration)) {
+            if(ImGui::Begin("Confirm Delete", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration)) {
                 ImGui::Text("Confirm deleting repository \"%s\"", selectedRepo.c_str());
                 ImGui::PushFont(fontlist[3]);
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 1));
                 ImGui::TextWrapped(
-                        "WARNING: This action is irreversible. All data belonging to %s will be deleted from the git server.",
-                        selectedRepo.c_str());
+                    "WARNING: This action is irreversible. All data belonging to %s will be deleted from the git server.",
+                    selectedRepo.c_str());
                 ImGui::PopFont();
                 ImGui::PopStyleColor();
                 ImGui::TextWrapped(
-                        "Following a confirmation, the software will save changes to the server immediately.");
+                    "Following a confirmation, the software will save changes to the server immediately.");
 
                 ImGui::NewLine();
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 0, 0, 1));
@@ -172,8 +177,7 @@ namespace bakermaker {
                     showConfirm = false;
                     repos.erase(selectedRepo);
                     reponames.erase(selectedRepo);
-                    ((bakermaker::SyncToServer*) bakermaker::configScreens[bakermaker::ProgramStage::SYNC_TO_SERVER])->startSync(
-                            selectedRepo);
+                    ((SyncToServer*)configScreens[ProgramStage::SYNC_TO_SERVER])->startSync(selectedRepo);
                     selectedRepo.clear();
                     confirmed = true;
                 }
@@ -189,21 +193,34 @@ namespace bakermaker {
     }
 
     int RepoManage::reset() {
-        using namespace ST::literals;
+        // Check if file exists
         if(!std::filesystem::exists("gitolite.conf") ||
-           std::filesystem::is_directory("gitolite.conf"))
+            std::filesystem::is_directory("gitolite.conf"))
             return -1;
 
         std::ifstream conf("gitolite.conf");
 
         if(!conf.is_open()) {
-            bakermaker::startErrorModal("Error reading config file. Try again.");
+            startErrorModal("Error reading config file. Try again.");
             config["synced"] = false;
-            return-2;
+            return -2;
         }
 
         ST::string currentRepo;
 
+        /* The expected format of the config file is as follows:
+         *
+         * First 2 lines:
+         * repo gitolite-admin
+         *      RW+ admin
+         *
+         * Following that, more repositories can be added with the following format, with 1 blank line between them:
+         * repo <name>
+         * \tRW+\t= admin <list of admin users for this repo>
+         * \t-\tmaster\t= <list of normal users for this repo>
+         * \tRW\t= <list of normal users for this repo>
+         *
+         */
         while(!conf.eof()) {
             ST::string line = getLine(conf);
             if(line.empty()) continue;
@@ -223,7 +240,7 @@ namespace bakermaker {
             }
 
             else {
-                for(const ST::string& str: line.after_first('=').trim().split(' ')) {
+                for(const ST::string& str : line.after_first('=').trim().split(' ')) {
                     if(str.empty()) break;
                     if(str == "admin") continue;
                     repos[currentRepo].insert(RepoUser(str, true));
@@ -231,7 +248,7 @@ namespace bakermaker {
 
                 line = getLine(conf);
 
-                for(const ST::string& str: line.after_first('=').trim().split(' ')) {
+                for(const ST::string& str : line.after_first('=').trim().split(' ')) {
                     if(str.empty()) break;
                     repos[currentRepo].insert(RepoUser(str, false));
                 }
@@ -250,15 +267,15 @@ namespace bakermaker {
         std::ofstream conf("gitolite.conf", std::ios::binary | std::ios::trunc);
         conf << "repo gitolite-admin\n\tRW+\t= admin\n\n";
 
-        for(const auto& pair: repos) {
+        for(const auto& pair : repos) {
             ST::string admins = "admin "_st, users;
-            for(const auto& ru: pair.second) {
+            for(const auto& ru : pair.second) {
                 if(ru.isAdmin) admins += ru.name + " "_st;
                 else users += ru.name + " "_st;
             }
 
             conf << "repo " << pair.first << "\n\tRW+\t= " << admins << "\n\t- master\t= " << users
-                 << "\n\tRW\t= " << users << "\n\n";
+                << "\n\tRW\t= " << users << "\n\n";
         }
 
         conf.close();
@@ -267,7 +284,8 @@ namespace bakermaker {
     }
 
     void RepoManage::deleteUser(const ST::string& user) {
-        for(auto& repo: repos) {
+        // Search all repositories and remove the specified user from it if found
+        for(auto& repo : repos) {
             std::erase_if(repo.second, [&user](const RepoUser& r) { return r.name == user; });
         }
 

@@ -1,16 +1,16 @@
 #include <charconv>
-#include "setup.h"
+#include <fstream>
 
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
+#include "romfs/romfs.hpp"
+#include "stb_image.h"
 #include "string_theory/string"
 #include "STStringJson.h"
-#include "romfs/romfs.hpp"
-#include <fstream>
 #include "nlohmann/json.hpp"
-#include "stb_image.h"
 
+#include "setup.h"
 #include "UI/BaseUIScreen.h"
 #include "UI/ServerSetup.h"
 #include "UI/ServerConnect.h"
@@ -24,8 +24,7 @@
 #include "UI/DebugExport.h"
 
 namespace bakermaker {
-    bakermaker::ImguiMarkdownRender* documentation;
-    bakermaker::ProgramStage stage = bakermaker::ProgramStage::SERVER_CONNECT;
+    ImguiMarkdownRender* documentation;
     ST::string documarkdown;
     nlohmann::json config;
 
@@ -34,6 +33,7 @@ namespace bakermaker {
         glfwSwapInterval(1);
         glfwSetWindowTitle(window, "Gitolite Server Setup");
 
+        // Load window icon
         {
             int imagew = 0;
             int imageh = 0;
@@ -59,6 +59,7 @@ namespace bakermaker {
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init();
 
+        // Load fonts
         ImFont **fonts = new ImFont *[4];
         {
             ImFontConfig fontConfig;
@@ -72,12 +73,13 @@ namespace bakermaker {
             fonts[3] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 18, &fontConfig);
         }
 
-        bakermaker::fontlist = fonts;
+        fontlist = fonts;
 
         romfs::Resource mdfile = romfs::get("Documentation.md");
         documarkdown = ST::string((char *) mdfile.data(), mdfile.size());
-        bakermaker::documentation = new ImguiMarkdownRender(bakermaker::fontlist + 1);
+        documentation = new ImguiMarkdownRender(fontlist + 1);
 
+        // If config.json exists, load it. If not, create a new one
         if(std::filesystem::exists("config.json")) {
             std::ifstream jsonFile("config.json");
             config = nlohmann::json::parse(jsonFile);
@@ -99,16 +101,17 @@ namespace bakermaker {
             };
         }
 
-        new bakermaker::ServerSetup();
-        new bakermaker::ServerConnect();
-        new bakermaker::ServerInstall();
-        new bakermaker::CreateAdminKey();
-        new bakermaker::SyncToServer();
-        new bakermaker::UserManage();
-        new bakermaker::RepoManage();
-        new bakermaker::ClientExtract();
-        new bakermaker::UsedStorage();
-        new bakermaker::DebugExport();
+        // Create instances of UI elements
+        new ServerSetup();
+        new ServerConnect();
+        new ServerInstall();
+        new CreateAdminKey();
+        new SyncToServer();
+        new UserManage();
+        new RepoManage();
+        new ClientExtract();
+        new UsedStorage();
+        new DebugExport();
     }
 
     void prerender() {
@@ -133,7 +136,7 @@ namespace bakermaker {
     }
 
     void shutdown(GLFWwindow *window) {
-        delete bakermaker::documentation;
+        delete documentation;
 
         {
             std::ofstream jsonFile("config.json");

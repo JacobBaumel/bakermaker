@@ -1,41 +1,39 @@
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
-#include <iostream>
+#include <Windows.h>
 
 #include "GLFW/glfw3.h"
-#include "setup.h"
 #include "imgui.h"
 #include "ImguiMarkdownRender.h"
 #include "romfs/romfs.hpp"
+
 #include "UI/BaseUIScreen.h"
-#include "UI/ServerConnect.h"
 #include "UI/LibsNotFound.h"
+#include "setup.h"
 #include "utils.h"
+
+static constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove |
+    ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration;
+static constexpr ImGuiTabBarFlags tabflags = ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip;
+static constexpr ImGuiTabItemFlags tabitemflags = ImGuiTabItemFlags_NoCloseWithMiddleMouseButton |
+    ImGuiTabItemFlags_NoReorder;
 
 int main() {
     if(!glfwInit()) {
-        std::cout << "Error initing glfw" << std::endl;
         std::exit(-1);
     }
 
     glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
-
     GLFWwindow* window = glfwCreateWindow(1920, 1080, "Bakermaker - Git Server Management", nullptr, nullptr);
     if(!window) {
-        std::cout << "Error creating window!" << std::endl;
         std::exit(-1);
     }
 
     bakermaker::init(window);
 
-    const ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
-                                   ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration;
-
-    const ImGuiTabBarFlags tabflags = ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip;
-    const ImGuiTabItemFlags tabitemflags = ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | ImGuiTabItemFlags_NoReorder;
-
+    // Test load the ssh library to see if openssl and ssh dll's need to be extracted
     bool libsfound = true;
-    bakermaker::LibsNotFound* lnf;
+    bakermaker::LibsNotFound* lnf = nullptr;
     {
         HMODULE ssh = LoadLibraryA("ssh.dll");
         if(ssh == nullptr) {
@@ -51,17 +49,14 @@ int main() {
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->Size);
         if(ImGui::Begin("Bakermaker", nullptr, flags)) {
-            if(!libsfound) {
-                lnf->render();
-            }
-
+            if(!libsfound) lnf->render();
             else {
                 if(ImGui::BeginTabBar("##tabbar", tabflags)) {
                     bool setup = bakermaker::config["setup"].get<bool>();
-                    if(ImGui::BeginTabItem((setup ? "Server Config" :
-                            "Server Management"), nullptr, tabitemflags)) {
+                    if(ImGui::BeginTabItem((setup ? "Server Config" : "Server Management"), nullptr, tabitemflags)) {
                         if(ImGui::BeginChild("##workchild")) {
-                            for(auto& screen : (setup ? bakermaker::configScreens : bakermaker::setupScreens)) {
+                            for(auto& screen :
+                                (setup ? bakermaker::configScreens : bakermaker::setupScreens)) {
                                 screen.second->render();
                                 ImGui::NewLine();
                             }
@@ -88,7 +83,6 @@ int main() {
         }
 
         ImGui::End();
-
         bakermaker::postrender(window);
     }
 

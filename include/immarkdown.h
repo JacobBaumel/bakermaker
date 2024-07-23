@@ -1,7 +1,3 @@
-//
-// Created by skipp on 4/27/2024.
-//
-
 #ifndef BAKERMAKER_IMMARKDOWN_H
 #define BAKERMAKER_IMMARKDOWN_H
 

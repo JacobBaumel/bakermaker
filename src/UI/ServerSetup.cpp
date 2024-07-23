@@ -2,7 +2,8 @@
 #include "utils.h"
 
 namespace bakermaker {
-    ServerSetup::ServerSetup() : BaseUIScreen(bakermaker::ProgramStage::SERVER_SETUP, &bakermaker::setupScreens) {
+    ServerSetup::ServerSetup() : BaseUIScreen(ProgramStage::SERVER_SETUP, &setupScreens), useiscsi(true),
+                                 submitted(false) {
         strcpy_s(c1, config["iscsi"][0].get<std::string>().c_str());
         strcpy_s(c2, config["iscsi"][1].get<std::string>().c_str());
         strcpy_s(c3, config["iscsi"][2].get<std::string>().c_str());
@@ -10,15 +11,18 @@ namespace bakermaker {
     }
 
     void ServerSetup::render() {
+        // Header
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Server Setup");
         ImGui::PopFont();
         ImGui::Separator();
 
+        // Checkbox to enable or disable using iscsi
         ImGui::Text("Use iSCSI Storage");
         ImGui::SameLine();
         if(ImGui::Checkbox("##useiscsi", &useiscsi)) config["useiscsi"] = useiscsi;
 
+        // Input fields for the 3 iscsi commands
         if(!useiscsi) ImGui::BeginDisabled();
         ImGui::Text("iSCSI Command 1: ");
         ImGui::SameLine();

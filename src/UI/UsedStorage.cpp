@@ -1,27 +1,31 @@
-#include "UI/UsedStorage.h"
-
-#include <improgress.h>
-#include <utils.h>
-#include <UI/RepoManage.h>
 #include <sstream>
 
 #include "libssh/libssh.h"
+#include "improgress.h"
+
 #include "ssh_helper.h"
+#include "UI/RepoManage.h"
+#include "UI/UsedStorage.h"
+#include "utils.h"
 
 #define MSG_BUFFER_LENGTH 16
 
-
 namespace bakermaker {
+    using namespace ST::literals;
+
     static constexpr int FS_USED = 0;
     static constexpr int FS_AVAIL = 1;
     static constexpr int DIR_USED = 2;
+    static constexpr ImU32 fg = 0xff00ff00;
+    static constexpr ImU32 bg = 0xff303030;
 
     UsedStorage::UsedStorage() :
-        BaseUIScreen(bakermaker::ProgramStage::USED_STORAGE, &bakermaker::configScreens), exec(nullptr),
-        execDone(false), success(0), totalAvail(0), totalUsed(0), hasRefreshed(false) {
+        BaseUIScreen(ProgramStage::USED_STORAGE, &configScreens), exec(nullptr), execDone(false), success(0),
+        totalAvail(0), totalUsed(0), hasRefreshed(false) {
     }
 
     void UsedStorage::render() {
+        // Header
         ImGui::PushFont(fontlist[1]);
         ImGui::Text("Storage Usage");
         ImGui::PopFont();
@@ -32,6 +36,7 @@ namespace bakermaker {
         ImGui::PushFont(fontlist[2]);
         ImGui::Text("Total Storage Used: ");
 
+        // Total usage bar
         if(hasRefreshed && totalAvail != 0) {
             const float percent = static_cast<float>(static_cast<long double>(totalUsed) / static_cast<long double>(
                 totalAvail));
@@ -44,6 +49,7 @@ namespace bakermaker {
         ImGui::Text("Relative repository storage usage");
         ImGui::PopFont();
 
+        // Table with the relative storage usage between repositories (ie repositoryStorage / totalUsed);
         if(ImGui::BeginTable("##repousagetable", 1,
                              ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(300, 0))) {
             ImGui::TableNextRow();
@@ -76,7 +82,7 @@ namespace bakermaker {
             execDone = false;
             repousage.clear();
             success = 0;
-            reponames = std::set<ST::string>(((RepoManage*)configScreens[ProgramStage::REPO_MANAGE])->getRepoNames());
+            reponames = std::set(((RepoManage*)configScreens[ProgramStage::REPO_MANAGE])->getRepoNames());
             exec = new std::thread(&UsedStorage::refresh, this);
             ImGui::BeginDisabled();
         }
@@ -84,14 +90,14 @@ namespace bakermaker {
         if(exec && !execDone) {
             ImGui::EndDisabled();
             ImGui::SameLine();
-            bakermaker::spinner();
+            spinner();
         }
 
         if(execDone && exec) {
             exec->join();
             delete exec;
             exec = nullptr;
-            if(success != 0) bakermaker::startErrorModal("Error getting storage usage!");
+            if(success != 0) startErrorModal("Error getting storage usage!");
             else hasRefreshed = true;
         }
     }
@@ -145,20 +151,15 @@ namespace bakermaker {
         ssh_channel ch = ssh_channel_new(sess);
         ssh_channel_open_session(ch);
 
-        // ST::string cmd = usedOrTotal
-        //                      ? "du --bytes --total "_st + path +
-        //                      " | tail -n 1 | sed 's@^[^0-9]*\\([0-9]\\+\\).*@\1@'"_st
-        //                      : ("sudo df --block-size=1 --output=avail " + path + " | tail -n 1"_st);
-
         ST::string cmd;
 
         switch(option) {
         case FS_USED:
-            cmd = ("sudo df --block-size=1 --output=used " + path + " | tail -n 1"_st);
+            cmd = "sudo df --block-size=1 --output=used " + path + " | tail -n 1"_st;
             break;
 
         case FS_AVAIL:
-            cmd = ("sudo df --block-size=1 --output=avail " + path + " | tail -n 1"_st);
+            cmd = "sudo df --block-size=1 --output=avail " + path + " | tail -n 1"_st;
             break;
 
         case DIR_USED:

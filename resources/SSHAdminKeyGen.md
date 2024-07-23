@@ -3,4 +3,4 @@ when performing administrative actions later (ie creating/deleting repositories,
 
 Important notes:
 * There cannot be two users with the same name. Make sure the administrator name is unique from student names
-* User names are up to 64 characters long
+* Usernames are up to 64 characters long

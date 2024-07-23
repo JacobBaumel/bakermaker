@@ -17,5 +17,5 @@ Other important notes:
   characters to make sure they are still differentiated.
 * Once the keys have been generated, it will be possible to create the user-side setup program. This program will
   install git to the target system, along with the corresponding key.
-* User names are up to 64 characters long
+* Usernames are up to 64 characters long
 * User permissions are set up later on a per-repo basis

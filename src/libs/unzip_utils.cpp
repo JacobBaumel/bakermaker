@@ -1,15 +1,15 @@
 #include <filesystem>
+
 #include "miniz.h"
-#include "unzip_utils.h"
 #include "string_theory/string"
-#include <iostream>
+
+#include "unzip_utils.h"
 
 namespace bakermaker {
-    bool unzip_from_mem(void* data, size_t size) {
-        mz_zip_archive arch;
-        memset((void*)&arch, 0, sizeof(arch));
+    bool unzip_from_mem(const void* data, const size_t size) {
+        mz_zip_archive arch{};
         mz_zip_reader_init_mem(&arch, data, size, 0);
-        mz_uint totalFiles = mz_zip_reader_get_num_files(&arch);
+        const mz_uint totalFiles = mz_zip_reader_get_num_files(&arch);
 
         for(mz_uint i = 0; i < totalFiles; i++) {
             char archname[128];
@@ -28,18 +28,18 @@ namespace bakermaker {
     }
 
     bool zip_debug() {
-        mz_zip_archive arch;
-        memset((void*)&arch, 0, sizeof(mz_zip_archive));
+        static constexpr auto files = {"keyfile", "config.json", "gitolite.conf", "install.log"};
+        mz_zip_archive arch{};
         bool success = true;
         success = mz_zip_writer_init_file(&arch, "debug.zip", 0);
-        if(std::filesystem::exists("keyfile")) success = success && mz_zip_writer_add_file(
-            &arch, "keyfile", "keyfile", nullptr, 0, MZ_BEST_COMPRESSION);
-        if(std::filesystem::exists("config.json")) success = success && mz_zip_writer_add_file(
-            &arch, "config.json", "config.json", nullptr, 0, MZ_BEST_COMPRESSION);
-        if(std::filesystem::exists("gitolite.conf")) success = success && mz_zip_writer_add_file(
-            &arch, "gitolite.conf", "gitolite.conf", nullptr, 0, MZ_BEST_COMPRESSION);
-        if(std::filesystem::exists("install.log")) success = success && mz_zip_writer_add_file(
-            &arch, "install.log", "install.log", nullptr, 0, MZ_BEST_COMPRESSION);
+
+        for(const auto& file : files) {
+            if(std::filesystem::exists(file)) success = success && mz_zip_writer_add_file(
+                &arch, file, file, nullptr, 0, MZ_BEST_COMPRESSION);
+        }
+
+        // For some reason this function "mz_zip_writer_add_file" also writes to disk. There is no dedicated
+        // "write to disk" function. It gets the target filename from the "mz_zip_writer_init_file" function above
         mz_zip_writer_add_file(&arch, "keys/", nullptr, nullptr, 0, MZ_BEST_COMPRESSION);
         for(const auto& file : std::filesystem::directory_iterator("keys")) {
             if(file.is_directory()) continue;

@@ -1,23 +1,20 @@
-#include "UI/LibsNotFound.h"
-#include "UI/BaseUIScreen.h"
-#include <thread>
 #include "romfs/romfs.hpp"
-#include "improgress.h"
-#include <fstream>
-#include <iostream>
+
+#include "UI/BaseUIScreen.h"
+#include "UI/LibsNotFound.h"
 #include "unzip_utils.h"
 #include "utils.h"
 
 namespace bakermaker {
-    LibsNotFound::LibsNotFound() : BaseUIScreen(bakermaker::ProgramStage::LIBS_NOT_FOUND, nullptr),
-        extrDone(false) {
-        extrThread = new std::thread([this](){
-            romfs::Resource libs = romfs::get("libs.zip");
-            unzip_from_mem((void*) libs.data(), libs.size());
-            extrDone = true;
-        });
+    static constexpr ImVec2 MODAL_SIZE{525, 130};
+    static constexpr ImGuiWindowFlags modalFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_Modal;
+
+    LibsNotFound::LibsNotFound() : BaseUIScreen(ProgramStage::LIBS_NOT_FOUND, nullptr) {
+        const romfs::Resource libs = romfs::get("libs.zip");
+        unzip_from_mem(libs.data(), libs.size());
     }
 
+    // Extraction is just done in the constructor. No real need for threading because this extraction is very quick
     void LibsNotFound::render() {
         ImGui::SetNextWindowFocus();
         ImGui::SetNextWindowSize(MODAL_SIZE);
@@ -27,20 +24,7 @@ namespace bakermaker {
         ImGui::SetNextWindowPos(screenSize);
         if(ImGui::Begin("Test Modal", nullptr, modalFlags)) {
             ImGui::Text("Extracting Libraries");
-            if(!extrDone) {
-                ImGui::SameLine();
-                bakermaker::spinner();
-            }
-
-            else {
-                if(extrThread) {
-                    extrThread->join();
-                    delete extrThread;
-                    extrThread = nullptr;
-                }
-
-                ImGui::Text("Library Extraction Complete. Please restart the program.");
-            }
+            ImGui::Text("Library Extraction Complete. Please restart the program.");
         }
 
         ImGui::End();

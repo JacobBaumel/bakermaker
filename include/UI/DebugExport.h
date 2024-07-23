@@ -4,6 +4,7 @@
 #include "UI/BaseUIScreen.h"
 
 namespace bakermaker {
+    // UI element to show menu for creating debug.zip
     class DebugExport : public BaseUIScreen {
     public:
         DebugExport();

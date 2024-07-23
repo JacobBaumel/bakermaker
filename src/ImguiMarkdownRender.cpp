@@ -1,23 +1,25 @@
-#include "immarkdown.h"
-#include "ImguiMarkdownRender.h"
 #include <Windows.h>
-#include <iostream>
-#include "stb_image.h"
+
+#include "immarkdown.h"
 #include "romfs/romfs.hpp"
-#include "string_theory/string"
+
+#include "ImguiMarkdownRender.h"
+#include "stb_image.h"
 
 namespace bakermaker {
     void ImguiMarkdownRender::linkCallback(ImGui::MarkdownLinkCallbackData data) {
         if(!data.isImage) {
+            // Open supplied link with default browser
             ST::string link(data.link, data.linkLength);
-            std::cout << link.c_str() << std::endl;
             ShellExecuteA(nullptr, "open", link.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         }
     }
 
-    ImGui::MarkdownImageData ImguiMarkdownRender::imageCallback(ImGui::MarkdownLinkCallbackData data) {
-        std::map<ST::string, ImGui::MarkdownImageData>& imageMap = ((ImguiMarkdownRender*) data.userData)->images;
-        ST::string imageName(data.link, data.linkLength);
+    ImGui::MarkdownImageData ImguiMarkdownRender::imageCallback(ImGui::MarkdownLinkCallbackData callbackData) {
+        // Callback for markdown image rendering. Will load the appropriate image from romfs if it is not already
+        // uploaded to the GPU.
+        std::map<ST::string, ImGui::MarkdownImageData>& imageMap = ((ImguiMarkdownRender*)callbackData.userData)->images;
+        ST::string imageName(callbackData.link, callbackData.linkLength);
 
         if(!imageMap.contains(imageName)) {
             ImGui::MarkdownImageData idata;
@@ -26,14 +28,13 @@ namespace bakermaker {
             GLuint texture;
             int width;
             int height;
-            bool success = ImguiMarkdownRender::loadTextureFromRomfs(imageName.c_str(), &texture, &width, &height);
+            bool success = loadTextureFromRomfs(imageName.c_str(), &texture, &width, &height);
 
             if(success) {
-                ((ImguiMarkdownRender*) data.userData)->imageNames.push_back(texture);
-                ((ImguiMarkdownRender*) data.userData)->imageNamesLength++;
+                ((ImguiMarkdownRender*)callbackData.userData)->imageNames.push_back(texture);
                 idata.isValid = true;
-                idata.user_texture_id = (void*) ((long long) texture);
-                idata.size = ImVec2((float) width / 2, (float) height / 2);
+                idata.user_texture_id = (void*)((long long)texture);
+                idata.size = ImVec2((float)width / 2, (float)height / 2);
             }
 
             else {
@@ -47,7 +48,7 @@ namespace bakermaker {
             const ImVec2 contentSize = ImGui::GetContentRegionAvail();
             ImVec2 imageSize(imageMap[imageName].size);
             if(imageMap[imageName].size.x > contentSize.x) {
-                float const ratio = imageSize.y/imageSize.x;
+                float const ratio = imageSize.y / imageSize.x;
                 imageSize.x = contentSize.x;
                 imageSize.y = contentSize.x * ratio;
             }
@@ -61,12 +62,13 @@ namespace bakermaker {
     }
 
     bool ImguiMarkdownRender::loadTextureFromRomfs(const char* filename, GLuint* tex, int* width, int* height) {
+        // Loads image from romfs and parses with stb_image, then uploads to the gpu for later use
         int image_width = 0;
         int image_height = 0;
         romfs::Resource image = romfs::get(filename);
-        unsigned char* image_data = stbi_load_from_memory((unsigned char*) image.data(), image.size(),
+        unsigned char* image_data = stbi_load_from_memory((unsigned char*)image.data(), image.size(),
                                                           &image_width, &image_height, nullptr, 4);
-        if (image_data == nullptr)
+        if(image_data == nullptr)
             return false;
 
         // Create a OpenGL texture identifier
@@ -82,7 +84,7 @@ namespace bakermaker {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #undef GL_CLAMP_TO_EDGE
 
-        // Upload pixels into texture
+        // Upload pixels to texture
 #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 #endif
@@ -108,6 +110,6 @@ namespace bakermaker {
     }
 
     void ImguiMarkdownRender::render(const ST::string& markdown) {
-        ImGui::Markdown(markdown.c_str(), markdown.size() - 1, config);
+        Markdown(markdown.c_str(), markdown.size() - 1, config);
     }
 }

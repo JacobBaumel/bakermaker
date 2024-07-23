@@ -3,13 +3,11 @@
 
 #include "UI/BaseUIScreen.h"
 #include "utils.h"
-#include <thread>
-#include <atomic>
 
 namespace bakermaker {
+    // UI to manage users
     class UserManage : public BaseUIScreen {
-    private:
-        char newName[USERLENGTH] = {'\0'};
+        char newName[USERLENGTH] = {};
 
     public:
         UserManage();

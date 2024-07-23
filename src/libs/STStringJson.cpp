@@ -7,7 +7,7 @@ NLOHMANN_JSON_NAMESPACE_BEGIN
             j = str.c_str();
         }
 
-        void adl_serializer<ST::string>::from_json(const nlohmann::json& j, ST::string& str) {
+        void adl_serializer<ST::string>::from_json(const json& j, ST::string& str) {
             str = j.get<std::string>().c_str();
         }
 
