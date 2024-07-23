@@ -8,7 +8,7 @@
 #include "libssh/sftp.h"
 #include "ssh_helper.h"
 
-#include <iostream>
+#include <fstream>
 
 namespace bakermaker {
     ServerInstall::ServerInstall()
@@ -92,7 +92,9 @@ namespace bakermaker {
                 if(success == -1) bakermaker::startErrorModal("Failed when connecting to server!");
                 else if(success == 1)
                     bakermaker::startErrorModal("Failed when installing components. "
-                                                "Read log to find issue. Press \"Begin\" again to resume at last failed commmand.");
+                                                "Read install.log to find issue. Press \"Begin\" again to resume at last failed commmand.");
+                std::ofstream installlog("install.log", std::ios::trunc);
+                installlog << commandProgress.c_str();
             }
 
             if(success == 0) {

@@ -38,6 +38,8 @@ namespace bakermaker {
             &arch, "config.json", "config.json", nullptr, 0, MZ_BEST_COMPRESSION);
         if(std::filesystem::exists("gitolite.conf")) success = success && mz_zip_writer_add_file(
             &arch, "gitolite.conf", "gitolite.conf", nullptr, 0, MZ_BEST_COMPRESSION);
+        if(std::filesystem::exists("install.log")) success = success && mz_zip_writer_add_file(
+            &arch, "install.log", "install.log", nullptr, 0, MZ_BEST_COMPRESSION);
         mz_zip_writer_add_file(&arch, "keys/", nullptr, nullptr, 0, MZ_BEST_COMPRESSION);
         for(const auto& file : std::filesystem::directory_iterator("keys")) {
             if(file.is_directory()) continue;
