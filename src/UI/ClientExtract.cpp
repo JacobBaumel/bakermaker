@@ -61,17 +61,17 @@ namespace bakermaker {
         success = 0;
 
         // If a client program has already been extracted, delete it and create a new directory
-        if(std::filesystem::exists("bakermakerclient")) {
-            std::filesystem::remove_all("bakermakerclient");
+        if(std::filesystem::exists("setupclient")) {
+            std::filesystem::remove_all("setupclient");
         }
 
-        std::filesystem::create_directories("bakermakerclient");
+        std::filesystem::create_directories("setupclient");
 
         // Load client program from romfs and write to disk
         {
-            romfs::Resource bmc = romfs::get("bakermakerclient.exe");
+            romfs::Resource bmc = romfs::get("setupclient.exe");
             FILE* file;
-            fopen_s(&file, "bakermakerclient/bakermakerclient.exe", "wb");
+            fopen_s(&file, "setupclient/setupclient.exe", "wb");
             size_t nwritten = fwrite(bmc.data(), 1, bmc.size(), file);
             fclose(file);
 
@@ -82,16 +82,16 @@ namespace bakermaker {
         }
 
         // Copy private keys to the client program directory
-        std::filesystem::create_directories("bakermakerclient/keys");
+        std::filesystem::create_directories("setupclient/keys");
         for(const auto& file : std::filesystem::directory_iterator("keys")) {
             if(file.path().string().ends_with(".pub")) continue;
             ST::string dest = file.path().string();
             dest = dest.after_last('\\');
-            copy_file(file, ("bakermakerclient/keys/"_st + dest).c_str());
+            copy_file(file, ("setupclient/keys/"_st + dest).c_str());
         }
 
         // Create the "ip" file
-        std::ofstream ipfile("bakermakerclient/ip");
+        std::ofstream ipfile("setupclient/ip");
         ipfile << ip.c_str() << '\n';
         ipfile << port;
         ipfile.close();
