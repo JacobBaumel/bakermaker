@@ -6,6 +6,8 @@
 namespace bakermaker {
     // UI element to show menu for creating debug.zip
     class DebugExport : public BaseUIScreen {
+        bool showSuccess;
+
     public:
         DebugExport();
         void render() override;

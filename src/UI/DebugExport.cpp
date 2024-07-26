@@ -3,7 +3,7 @@
 #include "utils.h"
 
 namespace bakermaker {
-    DebugExport::DebugExport() : BaseUIScreen(ProgramStage::DEBUG_EXPORT, &configScreens) {
+    DebugExport::DebugExport() : BaseUIScreen(ProgramStage::DEBUG_EXPORT, &configScreens), showSuccess(false) {
     }
 
     // Very simple section. Just show button to create the export. It is a fairly quick function anyways, and its better
@@ -16,7 +16,17 @@ namespace bakermaker {
 
         ImGui::Text("Create zip archive of all important data.");
         if(ImGui::Button("Create##debug_export_create")) {
-            if(!zip_debug()) startErrorModal("Failed to create debug export!");
+            showSuccess = false;
+            if(!zip_debug()) {
+                startErrorModal("Failed to create debug export!");
+            }
+            else showSuccess = true;
+        }
+
+        if(showSuccess) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+            ImGui::Text("Success!");
+            ImGui::PopStyleColor();
         }
     }
 }
