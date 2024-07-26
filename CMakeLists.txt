@@ -53,5 +53,6 @@ target_include_directories(bakermaker PUBLIC libs/glfw/include libs/imgui
         libs/imgui/backends libs/json/include libs/miniz ${string_theory_INCLUDE_DIRS} ${LIBSSH_INCLUDE_DIRS} include)
 
 target_link_options(bakermaker PRIVATE "/DELAYLOAD:$<TARGET_FILE_BASE_NAME:ssh>.dll")
+set_property(TARGET bakermaker glfw string_theory ${LIBROMFS_LIBRARY} miniz nlohmann_json PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gitolitesetup")
