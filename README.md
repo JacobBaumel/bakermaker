@@ -42,7 +42,7 @@ This project submodules [GLFW](https://github.ccom/GLFW/GLFW), [Dear ImGui](http
 https://libssh.org), [openssl](https://github.com/openssl/openssl), and [zlib](https://zlib.net) to be available on
 the system, such as through [vcpkg](https://vcpkg.io).
 
-Before building, the project requires two user-provided files present:
+Before building, the project requires a few user-provided files present:
   - A copy of the [client program](https://github.com/jacobbaumel/bakermakersetuper) located at [resources/setupclient.exe](
 ./libs/setupclient.exe)
   - A zip archive located at [resources/libs.zip](resources/libs.zip) with the following files:
@@ -50,6 +50,7 @@ Before building, the project requires two user-provided files present:
     - libcrypto-3-x64.dll
     - ucrtbased.dll
     - vcruntime140d.dll
+  - A font, provided as "font-bold.ttf" and "font-regular.ttf", both in the resources folder
 The final output will be located in the build folder, named gitolitesetuper.exe.
 
 ## Using Bakermaker
