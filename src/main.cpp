@@ -32,12 +32,10 @@ int main() {
     bakermaker::init(window);
 
     // Test load the ssh library to see if openssl and ssh dll's need to be extracted
-    bool libsfound = true;
     bakermaker::LibsNotFound* lnf = nullptr;
     {
         HMODULE ssh = LoadLibraryA("ssh.dll");
         if(ssh == nullptr) {
-            libsfound = false;
             lnf = new bakermaker::LibsNotFound();
         }
         FreeLibrary(ssh);
@@ -49,7 +47,7 @@ int main() {
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->Size);
         if(ImGui::Begin("Bakermaker", nullptr, flags)) {
-            if(!libsfound) lnf->render();
+            if(lnf) lnf->render();
             else {
                 if(ImGui::BeginTabBar("##tabbar", tabflags)) {
                     bool setup = bakermaker::config["setup"].get<bool>();
