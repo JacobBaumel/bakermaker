@@ -33,13 +33,11 @@ int main() {
 
     // Test load the ssh library to see if openssl and ssh dll's need to be extracted
     bakermaker::LibsNotFound* lnf = nullptr;
-    {
-        HMODULE ssh = LoadLibraryA("ssh.dll");
-        if(ssh == nullptr) {
-            lnf = new bakermaker::LibsNotFound();
-        }
-        FreeLibrary(ssh);
+
+    if(const HMODULE ssh = LoadLibraryA("ssh.dll"); ssh == nullptr) {
+        lnf = new bakermaker::LibsNotFound();
     }
+    else FreeLibrary(ssh);
 
     while(!glfwWindowShouldClose(window)) {
         bakermaker::prerender();
