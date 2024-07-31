@@ -75,7 +75,7 @@ namespace bakermaker {
 
         fontlist = fonts;
 
-        romfs::Resource mdfile = romfs::get("Documentation.md");
+        romfs::Resource mdfile = romfs::get("docs/Documentation.md");
         documarkdown = ST::string((char *) mdfile.data(), mdfile.size());
         documentation = new ImguiMarkdownRender(fontlist + 1);
 

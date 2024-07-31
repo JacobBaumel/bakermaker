@@ -13,7 +13,7 @@
 namespace bakermaker {
     CreateAdminKey::CreateAdminKey() : BaseUIScreen(ProgramStage::SSH_KEYGEN_ADMIN, &setupScreens), showSuccess(false) {
         // Load instructions from romfs
-        const romfs::Resource text = romfs::get("SSHAdminKeyGen.md");
+        const romfs::Resource text = romfs::get("docs/SSHAdminKeyGen.md");
         instructions = ST::string((const char*)text.data(), text.size());
 
         // Create "keys/" directory if it does not exist

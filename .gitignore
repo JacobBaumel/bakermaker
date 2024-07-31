@@ -4,6 +4,8 @@ resources/*
 !resources/*.png
 !resources/*.md
 !resources/*.sh
+!resources/docs
+!resources/docs/*.sh
 
 ##### Windows
 # Windows thumbnail cache files

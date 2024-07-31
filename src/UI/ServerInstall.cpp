@@ -17,7 +17,7 @@ namespace bakermaker {
     ServerInstall::ServerInstall()
         : BaseUIScreen(ProgramStage::SERVER_INSTALL, &setupScreens), instructions(""_st), exec(nullptr), success(0),
           execDone(false), showCommandOutputs(false) {
-        const romfs::Resource md = romfs::get("ServerInstallText.md");
+        const romfs::Resource md = romfs::get("docs/ServerInstallText.md");
         instructions = ST::string((const char*)md.data(), md.size());
     }
 
