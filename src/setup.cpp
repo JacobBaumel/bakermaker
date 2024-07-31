@@ -37,7 +37,7 @@ namespace bakermaker {
         {
             int imagew = 0;
             int imageh = 0;
-            romfs::Resource im = romfs::get("icon.png");
+            romfs::Resource im = romfs::get("images/icon.png");
             GLFWimage images[1];
             images[0].pixels = stbi_load_from_memory((unsigned char*) im.data(), im.size(),
                                                      &imagew, &imageh, nullptr, 4);
@@ -75,7 +75,7 @@ namespace bakermaker {
 
         fontlist = fonts;
 
-        romfs::Resource mdfile = romfs::get("docs/Documentation.md");
+        romfs::Resource mdfile = romfs::get("docs/ServerCreation.md");
         documarkdown = ST::string((char *) mdfile.data(), mdfile.size());
         documentation = new ImguiMarkdownRender(fontlist + 1);
 
