@@ -261,6 +261,48 @@ case $(cat progress) in
   30)
     sudo rm -rf /home/git/repositories/testing.git
 
+    prog 31
+    ;&
+
+  31)
+    sudo fallocate -l 8G /swapfile
+    err $? "Created swapfile" "Failed to create swapfile"
+
+    prog 32
+    ;&
+
+  32)
+    sudo chown root:root /swapfile
+    err $? "Set swapfile owner" "Failed to set swapfile owner"
+
+    prog 33
+    ;&
+
+  33)
+    sudo chmod 0600 /swapfile
+    err $? "Set swapfile permissions" "Failed to set swapfile permissions"
+
+    prog 34
+    ;&
+
+  34)
+    sudo mkswap /swapfile
+    err $? "Initialized swapfile" "Failed to initialize swapfile"
+
+    prog 35
+    ;&
+
+  35)
+    sudo swapon /swapfile
+    err $? "Enabled swapfile" "Failed to enable swapfile"
+
+    prog 36
+    ;&
+
+  36)
+    printf '/swapfile\tswap\tswap\tdefaults\t0 0\n' | sudo tee -a /etc/fstab
+    err $? "Added swapfile to /etc/fstab" "Failed to add swapfile to /etc/fstab"
+
     ;;
 esac
 
