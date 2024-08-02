@@ -45,7 +45,7 @@ namespace bakermaker {
                 delete exec;
                 exec = nullptr;
 
-                if(success != 0) startErrorModal("Error extracting client setup!");
+                if(success != 0) startErrorModal("Error extracting client setup! 1");
                 else config["extracting"] = false;
             }
 

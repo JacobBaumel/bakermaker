@@ -65,9 +65,7 @@ int main() {
                     }
                     if(ImGui::BeginTabItem("Documentation", nullptr, tabitemflags)) {
                         if(ImGui::BeginChild("##docchild")) {
-                            ImGui::Dummy(ImVec2(0, 15));
-                            ImGui::SetNextItemWidth(ImGui::GetIO().DisplaySize.x / 1.5);
-                            bakermaker::documentation->render(bakermaker::documarkdown);
+                            bakermaker::renderDocs();
                             ImGui::EndChild();
                         }
                         ImGui::EndTabItem();

@@ -90,7 +90,7 @@ namespace bakermaker {
         }
 
         // Write public key to file
-        rc = ssh_pki_export_pubkey_file(pub, ((ST::string(file) + ".pub")).c_str());
+        rc = ssh_pki_export_pubkey_file(pub, (ST::string(file) + ".pub").c_str());
         ssh_key_free(key);
         ssh_key_free(pub);
 

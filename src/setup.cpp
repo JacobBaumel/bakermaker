@@ -25,7 +25,6 @@
 
 namespace bakermaker {
     ImguiMarkdownRender* documentation;
-    ST::string documarkdown;
     nlohmann::json config;
 
     void init(GLFWwindow* window) {
@@ -39,7 +38,7 @@ namespace bakermaker {
             int imageh = 0;
             romfs::Resource im = romfs::get("images/icon.png");
             GLFWimage images[1];
-            images[0].pixels = stbi_load_from_memory((unsigned char*) im.data(), im.size(),
+            images[0].pixels = stbi_load_from_memory((unsigned char*)im.data(), im.size(),
                                                      &imagew, &imageh, nullptr, 4);
             images[0].height = imageh;
             images[0].width = imagew;
@@ -50,8 +49,8 @@ namespace bakermaker {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
         io.IniFilename = nullptr;
 
         ImGui::StyleColorsDark();
@@ -60,23 +59,21 @@ namespace bakermaker {
         ImGui_ImplOpenGL3_Init();
 
         // Load fonts
-        ImFont **fonts = new ImFont *[4];
+        ImFont** fonts = new ImFont*[4];
         {
             ImFontConfig fontConfig;
             fontConfig.FontDataOwnedByAtlas = false;
             io.Fonts->Clear();
             romfs::Resource umr = romfs::get("font-regular.ttf");
-            fonts[0] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 15, &fontConfig);
+            fonts[0] = io.Fonts->AddFontFromMemoryTTF((void*)umr.data(), umr.size(), 15, &fontConfig);
             umr = romfs::get("font-bold.ttf");
-            fonts[1] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 25, &fontConfig);
-            fonts[2] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 20, &fontConfig);
-            fonts[3] = io.Fonts->AddFontFromMemoryTTF((void *) umr.data(), umr.size(), 18, &fontConfig);
+            fonts[1] = io.Fonts->AddFontFromMemoryTTF((void*)umr.data(), umr.size(), 25, &fontConfig);
+            fonts[2] = io.Fonts->AddFontFromMemoryTTF((void*)umr.data(), umr.size(), 20, &fontConfig);
+            fonts[3] = io.Fonts->AddFontFromMemoryTTF((void*)umr.data(), umr.size(), 18, &fontConfig);
         }
 
         fontlist = fonts;
 
-        romfs::Resource mdfile = romfs::get("docs/ServerCreation.md");
-        documarkdown = ST::string((char *) mdfile.data(), mdfile.size());
         documentation = new ImguiMarkdownRender(fontlist + 1);
 
         // If config.json exists, load it. If not, create a new one
@@ -87,17 +84,20 @@ namespace bakermaker {
 
         else {
             config = {
-                    {"synced", false},
-                    {"extracting", false},
-                    {"unsaved", false},
-                    {"setup", false},
-                    {"iscsi", {"", "", ""}},
-                    {"useiscsi", false},
-                    {"server", {
-                            {"ip", ""},
-                            {"port", 22},
-                            {"user", "ubuntu"}}},
-                    {"keys", nlohmann::json::array()}
+                {"synced", false},
+                {"extracting", false},
+                {"unsaved", false},
+                {"setup", false},
+                {"iscsi", {"", "", ""}},
+                {"useiscsi", false},
+                {
+                    "server", {
+                        {"ip", ""},
+                        {"port", 22},
+                        {"user", "ubuntu"}
+                    }
+                },
+                {"keys", nlohmann::json::array()}
             };
         }
 
@@ -120,7 +120,6 @@ namespace bakermaker {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
     }
 
     void postrender(GLFWwindow* window) {
@@ -135,7 +134,7 @@ namespace bakermaker {
         glfwSwapBuffers(window);
     }
 
-    void shutdown(GLFWwindow *window) {
+    void shutdown(GLFWwindow* window) {
         delete documentation;
 
         {
@@ -151,4 +150,26 @@ namespace bakermaker {
         glfwTerminate();
     }
 
+    static void renderHeader(const ST::string& name, const ST::string& path, ST::string* doc) {
+        if(ImGui::CollapsingHeader(name.c_str())) {
+            if(!doc) {
+                romfs::Resource md = romfs::get(path.c_str());
+                doc = new ST::string((char*) md.data(), md.size());
+            }
+
+            documentation->render(doc);
+            ImGui::Separator();
+        }
+
+        else delete doc;
+    }
+
+    void renderDocs() {
+        static ST::string* docs[4];
+
+        renderHeader("Server Creation", "docs/ServerCreation.md", docs[0]);
+        renderHeader("Server Installation", "docs/ServerSetup.md", docs[1]);
+        renderHeader("Usage", "docs/Usage.md", docs[2]);
+        renderHeader("Error Codes", "docs/Errors.md", docs[3]);
+    }
 }

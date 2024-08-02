@@ -100,7 +100,7 @@ namespace bakermaker {
                     break;
 
                 case -1:
-                    startErrorModal("Could not initialize SSH Session. Application Error. (-1)");
+                    startErrorModal("Invalid connection arguments (-1)");
                     break;
 
                 case -2:
@@ -108,11 +108,11 @@ namespace bakermaker {
                     break;
 
                 case -3:
-                    startErrorModal("Error processing public key (-3)");
+                    startErrorModal("Error authenticating public key (-3)");
                     break;
 
                 case -4:
-                    startErrorModal("Error processing private key (-4)");
+                    startErrorModal("Error authenticating private key (-4)");
                     break;
 
                 case -5:

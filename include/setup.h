@@ -8,7 +8,6 @@
 
 namespace bakermaker {
     extern ImguiMarkdownRender* documentation;
-    extern ST::string documarkdown;
     extern nlohmann::json config;
 
     // Init function to set up glfw window and context
@@ -22,6 +21,9 @@ namespace bakermaker {
 
     // Shutdown code
     void shutdown(GLFWwindow* window);
+
+    // Render documentation
+    void renderDocs();
 }
 
 #endif //BAKERMAKER_SETUP_H

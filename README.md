@@ -54,8 +54,8 @@ Before building, the project requires a few user-provided files present:
 The final output will be located in the build folder, named gitolitesetuper.exe.
 
 ## Using Bakermaker
-There is a built-in manual tab that hosts all documentation for the program (WIP). Once finalized, all documentation 
-files will be located in [resources/docs](resources/docs).
+There is a built-in manual tab that hosts all documentation for the program. All documentation 
+files are located in [resources/docs](resources/docs).
 
 ## gitolite.conf output
 Bakermaker only supports a specific subset format of the normal gitolite configuration file. Bakermaker can only 

@@ -110,6 +110,11 @@ namespace bakermaker {
     }
 
     void ImguiMarkdownRender::render(const ST::string& markdown) {
-        Markdown(markdown.c_str(), markdown.size() - 1, config);
+        Markdown(markdown.c_str(), markdown.size(), config);
     }
+
+    void ImguiMarkdownRender::render(ST::string* markdown) {
+        Markdown(markdown->c_str(), markdown->size(), config);
+    }
+
 }

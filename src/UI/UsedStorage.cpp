@@ -97,7 +97,7 @@ namespace bakermaker {
             exec->join();
             delete exec;
             exec = nullptr;
-            if(success != 0) startErrorModal("Error getting storage usage!");
+            if(success != 0) startErrorModal(("Error getting storage usage! "_st + std::to_string(success)).c_str());
             else hasRefreshed = true;
         }
     }

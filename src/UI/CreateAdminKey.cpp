@@ -46,19 +46,19 @@ namespace bakermaker {
                     showSuccess = true;
                     break;
 
-                case 1:
+                case -1:
                     startErrorModal("Failed to generate SSH key!");
                     break;
 
-                case 2:
+                case -2:
                     startErrorModal("Failed to export key to file!");
                     break;
 
-                case 3:
+                case -3:
                     startErrorModal("Failed to generate public key!");
                     break;
 
-                case 4:
+                case -4:
                     startErrorModal("Failed to export public key to file!");
                     break;
 

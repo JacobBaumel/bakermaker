@@ -21,6 +21,7 @@ namespace bakermaker {
     public:
         explicit ImguiMarkdownRender(ImFont** headerFonts);
         void render(const ST::string& markdown);
+        void render(ST::string* markdown);
     };
 }
 
