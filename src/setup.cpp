@@ -4,12 +4,12 @@
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
-#include "romfs/romfs.hpp"
 #include "stb_image.h"
 #include "string_theory/string"
 #include "STStringJson.h"
 #include "nlohmann/json.hpp"
 
+#include "WindowsResource.h"
 #include "setup.h"
 #include "UI/BaseUIScreen.h"
 #include "UI/ServerSetup.h"
@@ -36,9 +36,9 @@ namespace bakermaker {
         {
             int imagew = 0;
             int imageh = 0;
-            romfs::Resource im = romfs::get("images/icon.png");
+            WindowsResource im("images/icon.png", "PNGIMG");
             GLFWimage images[1];
-            images[0].pixels = stbi_load_from_memory((unsigned char*)im.data(), im.size(),
+            images[0].pixels = stbi_load_from_memory((unsigned char*)im.getData(), im.getSize(),
                                                      &imagew, &imageh, nullptr, 4);
             images[0].height = imageh;
             images[0].width = imagew;
@@ -64,12 +64,12 @@ namespace bakermaker {
             ImFontConfig fontConfig;
             fontConfig.FontDataOwnedByAtlas = false;
             io.Fonts->Clear();
-            romfs::Resource umr = romfs::get("font-regular.ttf");
-            fonts[0] = io.Fonts->AddFontFromMemoryTTF((void*)umr.data(), umr.size(), 15, &fontConfig);
-            umr = romfs::get("font-bold.ttf");
-            fonts[1] = io.Fonts->AddFontFromMemoryTTF((void*)umr.data(), umr.size(), 25, &fontConfig);
-            fonts[2] = io.Fonts->AddFontFromMemoryTTF((void*)umr.data(), umr.size(), 20, &fontConfig);
-            fonts[3] = io.Fonts->AddFontFromMemoryTTF((void*)umr.data(), umr.size(), 18, &fontConfig);
+            WindowsResource umr("font-regular.ttf", "TTFFONT");
+            fonts[0] = io.Fonts->AddFontFromMemoryTTF((void*)umr.getData(), umr.getSize(), 15, &fontConfig);
+            umr = WindowsResource("font-bold.ttf", "TTFFONT");
+            fonts[1] = io.Fonts->AddFontFromMemoryTTF((void*)umr.getData(), umr.getSize(), 25, &fontConfig);
+            fonts[2] = io.Fonts->AddFontFromMemoryTTF((void*)umr.getData(), umr.getSize(), 20, &fontConfig);
+            fonts[3] = io.Fonts->AddFontFromMemoryTTF((void*)umr.getData(), umr.getSize(), 18, &fontConfig);
         }
 
         fontlist = fonts;
@@ -153,8 +153,8 @@ namespace bakermaker {
     static void renderHeader(const ST::string& name, const ST::string& path, ST::string* doc) {
         if(ImGui::CollapsingHeader(name.c_str())) {
             if(!doc) {
-                romfs::Resource md = romfs::get(path.c_str());
-                doc = new ST::string((char*) md.data(), md.size());
+                WindowsResource md(path.c_str(), "MARKDOWN");
+                doc = new ST::string(md.getData(), md.getSize());
             }
 
             documentation->render(doc);

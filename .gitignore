@@ -8,6 +8,8 @@ resources/*
 !resources/docs/*.sh
 !resources/images
 !resources/images/*.png
+!resources/resources.rc
+!resources/*.ico
 
 ##### Windows
 # Windows thumbnail cache files

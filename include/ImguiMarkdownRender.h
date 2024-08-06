@@ -12,7 +12,7 @@ namespace bakermaker {
     class ImguiMarkdownRender {
         static void linkCallback(ImGui::MarkdownLinkCallbackData data);
         static ImGui::MarkdownImageData imageCallback(ImGui::MarkdownLinkCallbackData callbackData);
-        static bool loadTextureFromRomfs(const char* filename, GLuint* tex, int* width, int* height);
+        static bool loadTextureFromResource(const char* filename, GLuint* tex, int* width, int* height);
         ImGui::MarkdownConfig config;
 
         std::map<ST::string, ImGui::MarkdownImageData> images;

@@ -5,7 +5,6 @@
 #include "GLFW/glfw3.h"
 #include "imgui.h"
 #include "ImguiMarkdownRender.h"
-#include "romfs/romfs.hpp"
 
 #include "UI/BaseUIScreen.h"
 #include "UI/LibsNotFound.h"

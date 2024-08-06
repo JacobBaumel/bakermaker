@@ -4,9 +4,9 @@ project(bakermaker)
 include(${CMAKE_TOOLCHAIN_FILE})
 set(CMAKE_CXX_STANDARD 20)
 
-set(LIBROMFS_PROJECT_NAME bakermaker)
-set(LIBROMFS_RESOURCE_LOCATION ${PROJECT_SOURCE_DIR}/resources)
-add_subdirectory(libs/libromfs)
+#set(LIBROMFS_PROJECT_NAME bakermaker)
+#set(LIBROMFS_RESOURCE_LOCATION ${PROJECT_SOURCE_DIR}/resources)
+#add_subdirectory(libs/libromfs)
 
 set(LIBZIP_DO_INSTALL OFF)
 add_subdirectory(libs/miniz)
@@ -36,9 +36,10 @@ add_executable(bakermaker src/main.cpp libs/imgui/imgui.cpp libs/imgui/imgui_dra
         src/UI/SyncToServer.cpp
         src/libs/STStringJson.cpp
         src/UI/ClientExtract.cpp
-        windowsrc/icon.rc
+        resources/resources.rc
         src/UI/UsedStorage.cpp
         src/UI/DebugExport.cpp
+        src/libs/WindowsResource.cpp
 )
 
 set(string_theory_FOUND 1)
@@ -47,12 +48,12 @@ find_package(string_theory CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(libssh REQUIRED)
 
-target_link_libraries(bakermaker PUBLIC glfw opengl32 gdi32 imm32 user32 advapi32 string_theory ${LIBROMFS_LIBRARY}
-    ssh miniz nlohmann_json PRIVATE delayimp)
+target_link_libraries(bakermaker PUBLIC glfw opengl32 gdi32 imm32 user32 advapi32 string_theory
+    ssh miniz nlohmann_json PRIVATE delayimp) # ${LIBROMFS_LIBRARY}
 target_include_directories(bakermaker PUBLIC libs/glfw/include libs/imgui
         libs/imgui/backends libs/json/include libs/miniz ${string_theory_INCLUDE_DIRS} ${LIBSSH_INCLUDE_DIRS} include)
 
 target_link_options(bakermaker PRIVATE "/DELAYLOAD:$<TARGET_FILE_BASE_NAME:ssh>.dll")
-set_property(TARGET bakermaker glfw string_theory ${LIBROMFS_LIBRARY} miniz nlohmann_json PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+set_property(TARGET bakermaker glfw string_theory miniz nlohmann_json PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # ${LIBROMFS_LIBRARY}
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gitolitesetuper")

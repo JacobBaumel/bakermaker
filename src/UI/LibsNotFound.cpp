@@ -1,5 +1,4 @@
-#include "romfs/romfs.hpp"
-
+#include "WindowsResource.h"
 #include "UI/BaseUIScreen.h"
 #include "UI/LibsNotFound.h"
 #include "unzip_utils.h"
@@ -10,8 +9,8 @@ namespace bakermaker {
     static constexpr ImGuiWindowFlags modalFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_Modal;
 
     LibsNotFound::LibsNotFound() : BaseUIScreen(ProgramStage::LIBS_NOT_FOUND, nullptr) {
-        const romfs::Resource libs = romfs::get("libs.zip");
-        unzip_from_mem(libs.data(), libs.size());
+        WindowsResource libs("libs.zip", "ZIPFILE");
+        unzip_from_mem(libs.getData(), libs.getSize());
     }
 
     // Extraction is just done in the constructor. No real need for threading because this extraction is very quick

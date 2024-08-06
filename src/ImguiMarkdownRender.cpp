@@ -1,10 +1,11 @@
 #include <Windows.h>
 
 #include "immarkdown.h"
-#include "romfs/romfs.hpp"
+#include "stb_image.h"
 
 #include "ImguiMarkdownRender.h"
-#include "stb_image.h"
+#include "WindowsResource.h"
+
 
 namespace bakermaker {
     void ImguiMarkdownRender::linkCallback(ImGui::MarkdownLinkCallbackData data) {
@@ -16,7 +17,7 @@ namespace bakermaker {
     }
 
     ImGui::MarkdownImageData ImguiMarkdownRender::imageCallback(ImGui::MarkdownLinkCallbackData callbackData) {
-        // Callback for markdown image rendering. Will load the appropriate image from romfs if it is not already
+        // Callback for markdown image rendering. Will load the appropriate image from resource if it is not already
         // uploaded to the GPU.
         std::map<ST::string, ImGui::MarkdownImageData>& imageMap = ((ImguiMarkdownRender*)callbackData.userData)->images;
         ST::string imageName(callbackData.link, callbackData.linkLength);
@@ -28,7 +29,7 @@ namespace bakermaker {
             GLuint texture;
             int width;
             int height;
-            bool success = loadTextureFromRomfs(imageName.c_str(), &texture, &width, &height);
+            bool success = loadTextureFromResource(imageName.c_str(), &texture, &width, &height);
 
             if(success) {
                 ((ImguiMarkdownRender*)callbackData.userData)->imageNames.push_back(texture);
@@ -61,12 +62,12 @@ namespace bakermaker {
         return imageMap[imageName];
     }
 
-    bool ImguiMarkdownRender::loadTextureFromRomfs(const char* filename, GLuint* tex, int* width, int* height) {
-        // Loads image from romfs and parses with stb_image, then uploads to the gpu for later use
+    bool ImguiMarkdownRender::loadTextureFromResource(const char* filename, GLuint* tex, int* width, int* height) {
+        // Loads image from resource and parses with stb_image, then uploads to the gpu for later use
         int image_width = 0;
         int image_height = 0;
-        romfs::Resource image = romfs::get(filename);
-        unsigned char* image_data = stbi_load_from_memory((unsigned char*)image.data(), image.size(),
+        WindowsResource image(filename, "PNGIMG");
+        unsigned char* image_data = stbi_load_from_memory((unsigned char*)image.getData(), image.getSize(),
                                                           &image_width, &image_height, nullptr, 4);
         if(image_data == nullptr)
             return false;

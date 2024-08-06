@@ -3,8 +3,8 @@
 #include "imgui_internal.h"
 #include "libssh/libssh.h"
 #include "libssh/sftp.h"
-#include "romfs/romfs.hpp"
 
+#include "WindowsResource.h"
 #include "UI/ServerInstall.h"
 #include "setup.h"
 #include "ssh_helper.h"
@@ -17,8 +17,8 @@ namespace bakermaker {
     ServerInstall::ServerInstall()
         : BaseUIScreen(ProgramStage::SERVER_INSTALL, &setupScreens), instructions(""_st), exec(nullptr), success(0),
           execDone(false), showCommandOutputs(false) {
-        const romfs::Resource md = romfs::get("docs/ServerInstallText.md");
-        instructions = ST::string((const char*)md.data(), md.size());
+        WindowsResource md("docs/ServerInstallText.md", "MARKDOWN");
+        instructions = ST::string(md.getData(), md.getSize());
     }
 
     void ServerInstall::render() {
@@ -205,12 +205,12 @@ namespace bakermaker {
                            "authorized_keys");
 
             {
-                romfs::Resource script = romfs::get("install.sh");
-                uploadToRemote(sftp, (void*)script.data(), script.size(), "install.sh");
-                script = romfs::get("commitall.sh");
-                uploadToRemote(sftp, (void*)script.data(), script.size(), "commitall.sh");
-                script = romfs::get("gituserinstall.sh");
-                uploadToRemote(sftp, (void*)script.data(), script.size(), "gituserinstall.sh");
+                WindowsResource script("install.sh", "SHELLSCRIPT");
+                uploadToRemote(sftp, (void*)script.getData(), script.getSize(), "install.sh");
+                script = WindowsResource("commitall.sh", "SHELLSCRIPT");
+                uploadToRemote(sftp, (void*)script.getData(), script.getSize(), "commitall.sh");
+                script = WindowsResource("gituserinstall.sh", "SHELLSCRIPT");
+                uploadToRemote(sftp, (void*)script.getData(), script.getSize(), "gituserinstall.sh");
             }
 
             sftp_free(sftp);

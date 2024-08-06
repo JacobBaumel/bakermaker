@@ -2,8 +2,7 @@
 #include <filesystem>
 #include <set>
 
-#include "romfs/romfs.hpp"
-
+#include "WindowsResource.h"
 #include "UI/BaseUIScreen.h"
 #include "UI/CreateAdminKey.h"
 #include "setup.h"
@@ -12,9 +11,9 @@
 
 namespace bakermaker {
     CreateAdminKey::CreateAdminKey() : BaseUIScreen(ProgramStage::SSH_KEYGEN_ADMIN, &setupScreens), showSuccess(false) {
-        // Load instructions from romfs
-        const romfs::Resource text = romfs::get("docs/SSHAdminKeyGen.md");
-        instructions = ST::string((const char*)text.data(), text.size());
+        // Load instructions from resource
+        WindowsResource text("docs/SSHAdminKeyGen.md", "MARKDOWN");
+        instructions = ST::string(text.getData(), text.getSize());
 
         // Create "keys/" directory if it does not exist
         if(!std::filesystem::exists("keys") && !std::filesystem::is_directory("keys"))

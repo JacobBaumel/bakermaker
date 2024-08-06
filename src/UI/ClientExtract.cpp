@@ -1,8 +1,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include "romfs/romfs.hpp"
-
+#include "WindowsResource.h"
 #include "UI/ClientExtract.h"
 #include "utils.h"
 
@@ -69,13 +68,13 @@ namespace bakermaker {
 
         // Load client program from romfs and write to disk
         {
-            romfs::Resource bmc = romfs::get("setupclient.exe");
+            WindowsResource bmc("setupclient.exe", "EXECUTABLE");
             FILE* file;
             fopen_s(&file, "setupclient/setupclient.exe", "wb");
-            size_t nwritten = fwrite(bmc.data(), 1, bmc.size(), file);
+            size_t nwritten = fwrite(bmc.getData(), 1, bmc.getSize(), file);
             fclose(file);
 
-            if(nwritten != bmc.size()) {
+            if(nwritten != bmc.getSize()) {
                 success = 1;
                 execDone = true;
             }
