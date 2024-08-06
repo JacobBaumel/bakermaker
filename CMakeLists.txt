@@ -4,10 +4,6 @@ project(bakermaker)
 include(${CMAKE_TOOLCHAIN_FILE})
 set(CMAKE_CXX_STANDARD 20)
 
-#set(LIBROMFS_PROJECT_NAME bakermaker)
-#set(LIBROMFS_RESOURCE_LOCATION ${PROJECT_SOURCE_DIR}/resources)
-#add_subdirectory(libs/libromfs)
-
 set(LIBZIP_DO_INSTALL OFF)
 add_subdirectory(libs/miniz)
 
@@ -49,11 +45,11 @@ find_package(OpenSSL REQUIRED)
 find_package(libssh REQUIRED)
 
 target_link_libraries(bakermaker PUBLIC glfw opengl32 gdi32 imm32 user32 advapi32 string_theory
-    ssh miniz nlohmann_json PRIVATE delayimp) # ${LIBROMFS_LIBRARY}
+        ssh miniz nlohmann_json PRIVATE delayimp)
 target_include_directories(bakermaker PUBLIC libs/glfw/include libs/imgui
         libs/imgui/backends libs/json/include libs/miniz ${string_theory_INCLUDE_DIRS} ${LIBSSH_INCLUDE_DIRS} include)
 
 target_link_options(bakermaker PRIVATE "/DELAYLOAD:$<TARGET_FILE_BASE_NAME:ssh>.dll")
-set_property(TARGET bakermaker glfw string_theory miniz nlohmann_json PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # ${LIBROMFS_LIBRARY}
+set_property(TARGET bakermaker glfw string_theory miniz nlohmann_json PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gitolitesetuper")

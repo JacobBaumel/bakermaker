@@ -4,9 +4,6 @@
 [submodule "libs/imgui"]
 	path = libs/imgui
 	url = https://github.com/ocornut/imgui
-[submodule "libs/libromfs"]
-	path = libs/libromfs
-	url = https://github.com/werwolv/libromfs
 [submodule "libs/miniz"]
 	path = libs/miniz
 	url = https://github.com/richgel999/miniz
