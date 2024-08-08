@@ -51,7 +51,7 @@ namespace bakermaker {
 
         // Table with the relative storage usage between repositories (ie repositoryStorage / totalUsed);
         if(ImGui::BeginTable("##repousagetable", 1,
-                             ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(300, 0))) {
+                             ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(600, 0))) {
             ImGui::TableNextRow();
             if(!hasRefreshed || exec || repousage.empty()) {
                 ImGui::TableNextColumn();
