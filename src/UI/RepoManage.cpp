@@ -1,4 +1,5 @@
 #include <fstream>
+#include <regex>
 
 #include "imgui.h"
 #include "string_theory/iostream"
@@ -42,6 +43,13 @@ namespace bakermaker {
         if(enter || ImGui::Button("Create")) {
             // Check that newrepo is not empty, and that the repo does not already exist
             if(newrepo[0] == '\0') startErrorModal("Please enter a name!");
+
+            else if(std::regex_search(
+                newrepo, std::regex(R"([\(\)\{\}\[\]" "\@\#\$\%\^\&\*\!\.\,\/\\\<\>\;\:\'\"\`\~\-\+\=\|])"))) {
+                startErrorModal(
+                    R"(Name cannot contain one of the following characters: [](){}/\|,.<>?;:'"`~!@#$%^&*- or space)");
+                }
+
             else if(reponames.contains(newrepo)) startErrorModal("Repository already exists!");
             else {
                 const ST::string rname = newrepo;

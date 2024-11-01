@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <set>
+#include <regex>
 
 #include "UI/RepoManage.h"
 #include "ssh_helper.h"
@@ -34,9 +35,16 @@ namespace bakermaker {
         if(enter || ImGui::Button("Add")) {
             if(newName[0] == '\0') startErrorModal("Please enter a name!");
 
-            if(config["keys"].get<std::set<std::string>>().contains(std::string(newName))) {
+            else if(std::regex_search(
+                newName, std::regex(R"([\(\)\{\}\[\]" "\@\#\$\%\^\&\*\!\.\,\/\\\<\>\;\:\'\"\`\~\-\+\=\|])"))) {
+                startErrorModal(
+                    R"(Name cannot contain one of the following characters: [](){}/\|,.<>?;:'"`~!@#$%^&*- or space)");
+            }
+
+            else if(config["keys"].get<std::set<std::string>>().contains(std::string(newName))) {
                 startErrorModal(("User \""_st + newName + "\" has already been added."_st).c_str());
             }
+
             else {
                 switch(-genSSHKeyToFile(("keys/"_st + newName).c_str())) {
                 case 0:
@@ -92,7 +100,7 @@ namespace bakermaker {
                 if(ImGui::Button(("Delete##"_st + std::to_string(i)).c_str())) {
                     std::filesystem::remove(("keys/"_st + user + ".pub"_st).c_str());
                     std::filesystem::remove(("keys/"_st + user).c_str());
-                    ((RepoManage*) configScreens[ProgramStage::REPO_MANAGE])->deleteUser(user);
+                    ((RepoManage*)configScreens[ProgramStage::REPO_MANAGE])->deleteUser(user);
                     config["keys"].erase(i);
                     config["unsaved"] = true;
                 }
