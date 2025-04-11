@@ -8,20 +8,20 @@
 #include "UI/UsedStorage.h"
 #include "utils.h"
 
-#define MSG_BUFFER_LENGTH 16
+constexpr int MSG_BUFFER_LENGTH = 16;
 
 namespace bakermaker {
     using namespace ST::literals;
 
     static constexpr int FS_USED = 0;
-    static constexpr int FS_AVAIL = 1;
+    static constexpr int FS_SIZE = 1;
     static constexpr int DIR_USED = 2;
     static constexpr ImU32 fg = 0xff00ff00;
     static constexpr ImU32 bg = 0xff303030;
 
     UsedStorage::UsedStorage() :
         BaseUIScreen(ProgramStage::USED_STORAGE, &configScreens), exec(nullptr), execDone(false), success(0),
-        totalAvail(0), totalUsed(0), hasRefreshed(false) {
+        totalSize(0), totalUsed(0), hasRefreshed(false) {
     }
 
     void UsedStorage::render() {
@@ -37,13 +37,13 @@ namespace bakermaker {
         ImGui::Text("Total Storage Used: ");
 
         // Total usage bar
-        if(hasRefreshed && totalAvail != 0) {
+        if(hasRefreshed && totalSize != 0) {
             const float percent = static_cast<float>(static_cast<long double>(totalUsed) / static_cast<long double>(
-                totalAvail));
+                totalSize));
             int ipercent = static_cast<int>(percent * 100);
             ImGui::BufferingBar("##totalused", percent, ImVec2(200, 10), bg, fg);
             ImGui::SameLine();
-            ImGui::Text("%d%% (%ld / %ld KB used)", ipercent, totalUsed.load(), totalAvail.load());
+            ImGui::Text("%d%% (%ld / %ld KB used)", ipercent, totalUsed.load(), totalSize.load());
         }
 
         ImGui::Text("Relative repository storage usage");
@@ -53,8 +53,8 @@ namespace bakermaker {
         if(ImGui::BeginTable("##repousagetable", 1,
                              ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(600, 0))) {
             ImGui::TableNextRow();
-            if(!hasRefreshed || exec || repousage.empty()) {
-                ImGui::TableNextColumn();
+            if(!hasRefreshed || exec || repousage.empty()) { // This test for the exec pointer acts as a lock for the
+                ImGui::TableNextColumn();                    // repousage map
                 ImGui::Text("No repositories created yet!");
             }
             else {
@@ -62,12 +62,12 @@ namespace bakermaker {
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(pair.first.c_str());
                     const float percent = static_cast<float>(static_cast<long double>(pair.second) / static_cast<long
-                        double>(totalUsed));
+                        double>(totalSize));
                     ImGui::BufferingBar(("##buffering_"_st + pair.first).c_str(),
                                         percent, ImVec2(200, 10), bg, fg);
                     ImGui::SameLine();
                     ImGui::Text("%d%% (%ld / %ld bytes used)", static_cast<int>(percent * 100), pair.second,
-                                totalUsed.load());
+                                totalSize.load());
                 }
             }
 
@@ -117,10 +117,10 @@ namespace bakermaker {
             return;
         }
 
-        totalAvail = getSizeOfSomething(sess, "/home/git/repositories"_st, FS_AVAIL);
+        totalSize = getSizeOfSomething(sess, "/home/git/repositories"_st, FS_SIZE);
         totalUsed = getSizeOfSomething(sess, "/home/git/repositories"_st, FS_USED);
 
-        if(totalAvail < 0 || totalUsed < 0) {
+        if(totalSize < 0 || totalUsed < 0) {
             ssh_disconnect(sess);
             ssh_free(sess);
             success = -2;
@@ -158,8 +158,8 @@ namespace bakermaker {
             cmd = "sudo df --block-size=1 --output=used " + path + " | tail -n 1"_st;
             break;
 
-        case FS_AVAIL:
-            cmd = "sudo df --block-size=1 --output=avail " + path + " | tail -n 1"_st;
+        case FS_SIZE:
+            cmd = "sudo df --block-size=1 --output=size " + path + " | tail -n 1"_st;
             break;
 
         case DIR_USED:

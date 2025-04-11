@@ -20,7 +20,7 @@ namespace bakermaker {
         std::atomic_bool execDone;
         std::atomic_int success;
 
-        std::atomic_llong totalAvail;
+        std::atomic_llong totalSize;
         std::atomic_llong totalUsed;
         std::map<ST::string, storage_t> repousage;
         std::set<ST::string> reponames;
